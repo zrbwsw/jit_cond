@@ -1,0 +1,32 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Training outputs, model weights, and logs
+checkpoints/
+outputs/
+logs/
+wandb/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.log
+
+# Local credentials and editor configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.ssh/
+.codex/
+.claude/
+.vscode/
+auth*.json
+credentials*.json
