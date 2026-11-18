@@ -43,9 +43,9 @@ print(); print("="*70); print("2. 语义项在条件里的能量占比"); print(
 with torch.no_grad():
     c = net.t_embedder(t)+net.y_embedder(labels)
     proj = net.grounding_proj(gt)
-    pc = c.unsqueeze(1)+proj
+    pc = c + proj
     d_cu = (c - (net.t_embedder(t)+net.y_embedder(null))).norm(dim=-1).mean()
-print("  ||patch_condition|| = %.3f" % pc.norm(dim=-1).mean())
+print("  ||block_condition|| = %.3f" % pc.norm(dim=-1).mean())
 print("  ||c_cond - c_uncond|| = %.3f" % d_cu)
 print("  相对差异 = %.2f%%  (修复前约 6.5%%)" % (100*d_cu/pc.norm(dim=-1).mean()))
 print("  注：这个比例取决于训练后 W_g 的尺度；CFG 分支现在语义已被正确剥离。")

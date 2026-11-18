@@ -119,6 +119,8 @@ def get_args_parser():
                         help='Exact checkpoint file for --evaluate_gen (overrides --resume/checkpoint-last.pth)')
     parser.add_argument('--save_last_freq', type=int, default=5,
                         help='Frequency (in epochs) to save checkpoints')
+    parser.add_argument('--save_interval', type=int, default=20,
+                        help='Frequency (in epochs) to save checkpoints')
     parser.add_argument('--log_freq', default=100, type=int)
     parser.add_argument('--device', default='cuda',
                         help='Device to use for training/testing')
@@ -230,7 +232,8 @@ def main(args):
 
         if 'optimizer' in checkpoint and 'epoch' in checkpoint:
             optimizer.load_state_dict(checkpoint['optimizer'])
-            args.start_epoch = checkpoint['epoch'] + 1
+            has_completed_epoch_count = hasattr(checkpoint.get('args'), 'save_interval')
+            args.start_epoch = checkpoint['epoch'] if has_completed_epoch_count else checkpoint['epoch'] + 1
             print("Loaded optimizer & scaler state!")
         del checkpoint
     else:
@@ -257,26 +260,27 @@ def main(args):
 
         train_one_epoch(model, model_without_ddp, data_loader_train, optimizer, device, epoch, log_writer=log_writer, args=args)
 
-        # Save checkpoint periodically
-        if epoch % args.save_last_freq == 0 or epoch + 1 == args.epochs:
+        # Save final checkpoint periodically for easier resuming
+        if (epoch + 1) % args.save_last_freq == 0 or (epoch + 1) == args.epochs:
             misc.save_model(
                 args=args,
                 model_without_ddp=model_without_ddp,
                 optimizer=optimizer,
-                epoch=epoch,
+                epoch=(epoch + 1),
                 epoch_name="last"
             )
 
-        if epoch % 100 == 0 and epoch > 0:
+        # Every save_interval epochs, we save a persistent checkpoint
+        if (epoch + 1) % args.save_interval == 0:
             misc.save_model(
                 args=args,
                 model_without_ddp=model_without_ddp,
                 optimizer=optimizer,
-                epoch=epoch
+                epoch=(epoch + 1)
             )
 
         # Perform online evaluation at specified intervals
-        if args.online_eval and (epoch % args.eval_freq == 0 or epoch + 1 == args.epochs):
+        if args.online_eval and ((epoch + 1) % args.eval_freq == 0 or epoch + 1 == args.epochs):
             torch.cuda.empty_cache()
             with torch.no_grad():
                 evaluate(model_without_ddp, args, epoch, batch_size=args.gen_bsz, log_writer=log_writer)

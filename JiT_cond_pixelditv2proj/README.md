@@ -55,22 +55,23 @@ The conditional CFG branch uses noisy grounding. The unconditional branch uses t
 
 ## Local resources and launchers
 
-The launchers default to **local execution**. `sh/portable_env.sh` selects a local Python environment and resolves resources without loading the dataset or weights. Every path can be overridden with environment variables.
+The launchers default to **GPU1 (`agent-gpu-l2-1`)**. `sh/portable_env.sh` selects the Python environment and resolves resources on the target host without loading the dataset or weights. Every path can be overridden with environment variables, and `GPU_HOST=local` disables SSH forwarding.
 
 On this server the resolved defaults are:
 
 | Resource | Path |
 | --- | --- |
-| Python | `/data0/zhangruobei/anaconda3/envs/irepa/bin/python` |
-| ImageNet (training only) | `/data0/datasets/imagenet` |
-| DINOv3-B weights | `/data0/pretrain_models/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth` |
-| DINO source | `../Ours_BaseT_rmsnorm2_Residual_1016_normft_1028/SSL_code/dinov3` |
+| Python | `/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/envs/irepa-py310-cu126-20261015/bin/python` |
+| ImageNet (training only) | `/mnt/shared-storage-user/datafactory-share/gushishen/imagenet` |
+| DINOv3-B weights | `/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/pretrain_models/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth` |
+| DINO source | `../Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3` |
 | FID statistics and Inception weights | `../fid_stats` |
 
-The default training experiment is `JiT-B16-DINOv3B-Noisy-PixelDiT2Proj-B600`: 600 epochs, eight GPUs, per-GPU batch 128, global batch 1024, and base LR `5e-5` (absolute LR `2e-4`). These are inherited training settings, not a measured memory/performance guarantee for the new projector.
+The default training experiment is `JiT-B16-DINOv3B-Noisy-PixelDiT2Proj-B80`: 80 epochs, eight GPUs, per-GPU batch 128, global batch 1024, and base LR `5e-5` (absolute LR `2e-4`). These are inherited training settings, not a measured memory/performance guarantee for the new projector. Online evaluation runs after epochs 20, 40, 60, and 80 (log indices 19, 39, 59, and 79).
 
 ```bash
-cd /data0/zhangruobei/Work/Pixel_Diffusion/JiT_cond_pixelditv2proj
+cd /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/JiT_cond_pixelditv2proj
+tmux new -s 'JiT-B16-DINOv3B-Noisy-PixelDiT2Proj-B80'
 bash sh/train_jit_b16_grounding_8gpu.sh --dry-run
 bash sh/train_jit_b16_grounding_8gpu.sh
 ```
@@ -78,7 +79,7 @@ bash sh/train_jit_b16_grounding_8gpu.sh
 A smaller local configuration can be supplied without editing the script:
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 GPUS=1 BATCH_SIZE=2 ONLINE_EVAL=0 \
+GPU_HOST=local CUDA_VISIBLE_DEVICES=0 GPUS=1 BATCH_SIZE=2 ONLINE_EVAL=0 \
   bash sh/train_jit_b16_grounding_8gpu.sh --dry-run
 ```
 
@@ -95,11 +96,11 @@ CHECKPOINT=/path/to/new-variant/checkpoint-last.pth \
 
 ## Validation
 
-The unit tests use small models and mocked DINO tokens to check the noisy-state path, sampling updates, CFG consistency, projector gradients, and checkpoint handling without a dataset or DINO checkpoint:
+The unit tests use small models and mocked DINO tokens to check the noisy-state path, sampling updates, CFG consistency, projector gradients, checkpoint handling, and launcher configuration without a dataset or DINO checkpoint:
 
 ```bash
-TORCHDYNAMO_DISABLE=1 OMP_NUM_THREADS=2 \
-  /data0/zhangruobei/anaconda3/envs/irepa/bin/python -m unittest discover -s tests -v
+PYTHONDONTWRITEBYTECODE=1 TORCHDYNAMO_DISABLE=1 OMP_NUM_THREADS=2 \
+  /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/envs/irepa-py310-cu126-20261015/bin/python -m unittest discover -s tests -v
 ```
 
 A small real-DINO smoke run uses synthetic training targets and noise-only sampling; it requires the local DINO assets but no ImageNet data:

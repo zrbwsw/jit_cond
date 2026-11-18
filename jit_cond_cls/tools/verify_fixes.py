@@ -11,11 +11,11 @@ os.chdir(PROJECT_ROOT)
 from model_jit import JiT_models
 
 torch.manual_seed(0)
-B, D, N = 4, 768, 256
+B, D = 4, 768
 x = torch.randn(B, 3, 256, 256)
 t = torch.rand(B) * 0.8 + 0.1
 y = torch.randint(0, 1000, (B,))
-gt = torch.randn(B, N, D)
+gt = torch.randn(B, D)
 
 print("=" * 70)
 print("1. zero-init: grounded 初始化 == baseline 初始化")

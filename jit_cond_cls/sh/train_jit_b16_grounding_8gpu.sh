@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# JiT-B/16 + DINOv3-B/16 patch-level AdaLN（验证集真实语义，上限实验）。
+# JiT-B/16 + DINOv3-B/16 CLS block-level AdaLN（验证集真实语义，上限实验）。
 # 在开发机 tmux 中运行：bash sh/train_jit_b16_grounding_8gpu.sh
 set -euo pipefail
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 SCRIPT_PATH="$(realpath -- "${BASH_SOURCE[0]}")"
 
 # ========================== 实验配置 ==========================
-GPU_HOST=agent-gpu-l2-3
+GPU_HOST=agent-gpu-l2-2
 GPUS=8
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-EXPERIMENT=JiT-B16-DINOv3B-PatchAdaLN-ValGrounding-B600
+EXPERIMENT=JiT-B16-DINOv3B-CLS-BlockAdaLN-ValGrounding-B600
 OUTPUT_DIR="$PROJECT_ROOT/checkpoints/$EXPERIMENT"
 IMAGENET_PATH=/mnt/shared-storage-user/datafactory-share/gushishen/imagenet
 PRETRAIN_MODELS_ROOT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/pretrain_models
@@ -35,7 +35,7 @@ CMD=("$PYTHON_BIN" -m torch.distributed.run --standalone --nproc_per_node="$GPUS
     --epochs 600 --warmup_epochs 5 \
     --gen_bsz 256 --num_images 50000 --cfg 2.9 --interval_min 0.1 --interval_max 1.0 \
     --sampling_method heun --num_sampling_steps 50 \
-    --eval_freq 20 --save_last_freq 20 \
+    --eval_freq 20 --save_last_freq 5 --save_interval 20 \
     --output_dir "$OUTPUT_DIR" --resume "$OUTPUT_DIR" \
     --data_path "$IMAGENET_PATH" --online_eval \
     --use_grounding --grounding_model dinov3_vitb16 --grounding_dim 768 \

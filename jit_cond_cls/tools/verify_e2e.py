@@ -85,7 +85,7 @@ print("3. CFG 无条件分支：语义条件必须被关闭")
 print("=" * 74)
 z = torch.randn(4, 3, 256, 256, device=device)
 t = torch.full((4, 1, 1, 1), 0.5, device=device)
-gt = tok[:2].repeat(2, 1, 1)
+gt = tok[:2].repeat(2, 1)
 net = model.net
 with torch.no_grad(), torch.amp.autocast("cuda", dtype=torch.bfloat16):
     with_gt = net(z, t.flatten(), torch.full((4,), 1000, device=device),

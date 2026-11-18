@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# JiT-B/16 + DINOv3-B/16 patch-level AdaLN sampling.
+# JiT-B/16 + DINOv3-B/16 CLS block-level AdaLN sampling.
 # 采样配置集中在顶部，--dry-run 只打印最终命令。
 set -euo pipefail
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -9,7 +9,7 @@ SCRIPT_PATH="$(realpath -- "${BASH_SOURCE[0]}")"
 GPU_HOST=agent-gpu-l2-2
 GPUS=8
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-CHECKPOINT="$PROJECT_ROOT/checkpoints/JiT-B16-DINOv3B-PatchAdaLN-B80/checkpoint-last.pth"
+CHECKPOINT="$PROJECT_ROOT/checkpoints/JiT-B16-DINOv3B-CLS-BlockAdaLN-ValGrounding-B600/checkpoint-last.pth"
 IMAGENET_PATH=/mnt/shared-storage-user/datafactory-share/gushishen/imagenet
 PRETRAIN_MODELS_ROOT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/pretrain_models
 FID_STATS_ROOT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/fid_stats
@@ -18,6 +18,8 @@ DINO_WEIGHTS="$PRETRAIN_MODELS_ROOT/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth
 # ===============================================================
 
 source "$PROJECT_ROOT/sh/portable_env.sh"
+has_local_gpu() { nvidia-smi -L 2>/dev/null | grep -q '^GPU'; }
+
 CKPT_DIR="$(dirname "$CHECKPOINT")"
 CKPT_TAG="$(basename "$CHECKPOINT" .pth)"
 EVAL_DIR="$CKPT_DIR/eval_${CKPT_TAG}_cfg2p9_interval0p1_1p0_heun50_image50000_gpus${GPUS}_bsz256"
@@ -40,8 +42,7 @@ if [[ "${1:-}" == "--dry-run" ]]; then
     exit 0
 fi
 
-if [[ "${SAMPLE_ON_GPU:-0}" != 1 && "$GPU_HOST" != local ]] && \
-   ! nvidia-smi -L >/dev/null 2>&1; then
+if [[ "${SAMPLE_ON_GPU:-0}" != 1 && "$GPU_HOST" != local ]] && ! has_local_gpu; then
     exec "$PROJECT_ROOT/sh/run_on_gpu.sh" "$GPU_HOST" env \
         SAMPLE_ON_GPU=1 bash "$SCRIPT_PATH" --worker
 fi

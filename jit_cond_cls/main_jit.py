@@ -25,14 +25,14 @@ def get_args_parser():
     parser = argparse.ArgumentParser('JiT', add_help=False)
 
     # 模型结构；use_grounding 打开后，Denoiser 会创建冻结的 DINOv3 teacher
-    # 和 JiT 的 patch-level AdaLN 投影层。
+    # 和 JiT 的 CLS block-level AdaLN 投影层。
     parser.add_argument('--model', default='JiT-B/16', type=str, metavar='MODEL',
                         help='Name of the model to train')
     parser.add_argument('--img_size', default=256, type=int, help='Image size')
     parser.add_argument('--attn_dropout', type=float, default=0.0, help='Attention dropout rate')
     parser.add_argument('--proj_dropout', type=float, default=0.0, help='Projection dropout rate')
     parser.add_argument('--use_grounding', '--enable_grounding', action=argparse.BooleanOptionalAction, default=True,
-                        help='Inject frozen DINOv3 clean-image patch tokens with patch-level AdaLN')
+                        help='Inject frozen DINOv3 clean-image CLS tokens with block-level AdaLN')
     parser.add_argument('--grounding_model', '--dino_model_name', dest='grounding_model', default='dinov3_vitb16', type=str,
                         help='DINOv3 model used for clean-image grounding')
     parser.add_argument('--grounding_dim', default=768, type=int,
@@ -118,6 +118,8 @@ def get_args_parser():
     parser.add_argument('--checkpoint', default='',
                         help='Exact checkpoint file for --evaluate_gen (overrides --resume/checkpoint-last.pth)')
     parser.add_argument('--save_last_freq', type=int, default=5,
+                        help='Frequency (in epochs) to save checkpoints')
+    parser.add_argument('--save_interval', type=int, default=20,
                         help='Frequency (in epochs) to save checkpoints')
     parser.add_argument('--log_freq', default=100, type=int)
     parser.add_argument('--device', default='cuda',
@@ -230,7 +232,8 @@ def main(args):
 
         if 'optimizer' in checkpoint and 'epoch' in checkpoint:
             optimizer.load_state_dict(checkpoint['optimizer'])
-            args.start_epoch = checkpoint['epoch'] + 1
+            has_completed_epoch_count = hasattr(checkpoint.get('args'), 'save_interval')
+            args.start_epoch = checkpoint['epoch'] if has_completed_epoch_count else checkpoint['epoch'] + 1
             print("Loaded optimizer & scaler state!")
         del checkpoint
     else:
@@ -257,26 +260,27 @@ def main(args):
 
         train_one_epoch(model, model_without_ddp, data_loader_train, optimizer, device, epoch, log_writer=log_writer, args=args)
 
-        # Save checkpoint periodically
-        if epoch % args.save_last_freq == 0 or epoch + 1 == args.epochs:
+        # Save final checkpoint periodically for easier resuming
+        if (epoch + 1) % args.save_last_freq == 0 or (epoch + 1) == args.epochs:
             misc.save_model(
                 args=args,
                 model_without_ddp=model_without_ddp,
                 optimizer=optimizer,
-                epoch=epoch,
+                epoch=(epoch + 1),
                 epoch_name="last"
             )
 
-        if epoch % 100 == 0 and epoch > 0:
+        # Every save_interval epochs, we save a persistent checkpoint
+        if (epoch + 1) % args.save_interval == 0:
             misc.save_model(
                 args=args,
                 model_without_ddp=model_without_ddp,
                 optimizer=optimizer,
-                epoch=epoch
+                epoch=(epoch + 1)
             )
 
         # Perform online evaluation at specified intervals
-        if args.online_eval and (epoch % args.eval_freq == 0 or epoch + 1 == args.epochs):
+        if args.online_eval and ((epoch + 1) % args.eval_freq == 0 or epoch + 1 == args.epochs):
             torch.cuda.empty_cache()
             with torch.no_grad():
                 evaluate(model_without_ddp, args, epoch, batch_size=args.gen_bsz, log_writer=log_writer)

@@ -2,7 +2,7 @@
 # Class-conditional generation from random noise; no reference image/data_path.
 set -euo pipefail
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-GPU_HOST="${GPU_HOST:-local}"
+GPU_HOST="${GPU_HOST:-agent-gpu-l2-1}"
 if [[ $# -gt 1 || ( $# -eq 1 && "${1:-}" != --dry-run ) ]]; then
     echo 'Usage: bash sh/sample_jit_b16_grounding_8gpu.sh [--dry-run]' >&2
     exit 2
@@ -30,7 +30,7 @@ GPUS="${GPUS:-${#visible_gpus[@]}}"
 [[ "$GPUS" =~ ^[1-9][0-9]*$ && "$GPUS" -le "${#visible_gpus[@]}" ]] || {
     echo 'GPUS must be positive and not exceed CUDA_VISIBLE_DEVICES count.' >&2; exit 2;
 }
-EXPERIMENT="${EXPERIMENT:-JiT-B16-DINOv3B-Noisy-PixelDiT2Proj-B600}"
+EXPERIMENT="${EXPERIMENT:-JiT-B16-DINOv3B-Noisy-PixelDiT2Proj-B80}"
 CHECKPOINT="${CHECKPOINT:-$PROJECT_ROOT/checkpoints/$EXPERIMENT/checkpoint-last.pth}"
 CKPT_DIR="$(dirname -- "$CHECKPOINT")"
 CKPT_TAG="$(basename -- "$CHECKPOINT" .pth)"
