@@ -30,3 +30,20 @@ wandb/
 .vscode/
 auth*.json
 credentials*.json
+
+# Local pre-edit file backups
+backups/
+
+# Experiment logs are tracked; weights, generated images and caches stay ignored.
+# checkpoints/ is re-included only for its text logs, TensorBoard events and
+# diagnostic summaries.
+!checkpoints/
+**/checkpoints/**
+!**/checkpoints/**/
+!**/checkpoints/**/*.log
+!**/checkpoints/**/events.out.tfevents.*
+!**/checkpoints/**/diagnose.json
+**/checkpoints/.cache/
+# 采样图目录：只保留评测日志，不进入版本库（也避免 git 扫描 5 万张 PNG）
+**/checkpoints/**/heun-steps*/
+!fid_floor/run.log

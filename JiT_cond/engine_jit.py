@@ -132,6 +132,13 @@ def evaluate(model_without_ddp, args, epoch, batch_size=64, log_writer=None):
         getattr(model_without_ddp, "grounding_source", "none") == "val"
         and getattr(model_without_ddp, "use_grounding", False)
     )
+    # class-level：每个类别用固定种子随机抽一张验证图，该类全部样本共用这一份
+    # grounding（c 相同、噪声不同）。种子与 rank 无关，所有进程得到同一张表。
+    val_grounding_level = getattr(args, "val_grounding_level", "instance")
+    if use_val_grounding and val_grounding_level == "class":
+        class_ref_index = np.random.default_rng(args.class_ref_seed).integers(0, per_class, size=class_num)
+        print("Class-level grounding: seed {}, class 0-4 use val index {}".format(
+            args.class_ref_seed, class_ref_index[:5].tolist()))
 
     for i in range(num_steps):
         print("Generation step {}/{}".format(i, num_steps))
@@ -144,6 +151,9 @@ def evaluate(model_without_ddp, args, epoch, batch_size=64, log_writer=None):
         labels_gen = torch.Tensor(labels_gen).long().cuda()
         # 类内序号：同一类别内生成第几张，用来配对验证集真实图片。
         intra_indices = gen_indices % per_class
+        if use_val_grounding and val_grounding_level == "class":
+            # 补齐用的尾部（gen_indices >= num_images，标签为 0、不保存）同样按类别取。
+            intra_indices = class_ref_index[class_label_gen_world[gen_indices].astype(np.int64)]
 
         with torch.amp.autocast('cuda', dtype=torch.bfloat16):
             gen_kwargs = {}

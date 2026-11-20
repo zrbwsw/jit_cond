@@ -1,0 +1,29 @@
+classes=1000 images=50000
+decoded+center-cropped in 20.2s
+PNG round-trip check: identical
+Creating feature extractor "inception-v3-compat" with features ['2048', 'logits_unbiased']
+Extracting features from input1
+Loading cached /data0/zhangruobei/Work/jit_cond_ablation/fid_floor/cache/imagenet_val50k_center256-inception-v3-compat-features-2048.pt
+Loading cached /data0/zhangruobei/Work/jit_cond_ablation/fid_floor/cache/imagenet_val50k_center256-inception-v3-compat-features-logits_unbiased.pt
+Inception Score: 231.8511 ± 2.985331
+Caching /data0/zhangruobei/Work/jit_cond_ablation/fid_floor/cache/imagenet_val50k_center256-inception-v3-compat-stat-fid-2048.pt
+Frechet Inception Distance: 1.494156
+vs jit_in256_stats: {'inception_score_mean': 231.85111333535428, 'inception_score_std': 2.985331004216875, 'frechet_inception_distance': 1.4941559327130562}
+vs ADM mu/sigma: 1.6786720515247566  FD(jit_in256_stats, ADM mu/sigma): 0.10179148068056065
+{
+  "num_images": 50000,
+  "preprocess": "PIL RGB -> util.crop.center_crop_arr(256) -> uint8",
+  "torch_fidelity": "0.4.0-beta",
+  "device": "cpu",
+  "feature_extraction_seconds": 4.6,
+  "vs_jit_in256_stats": {
+    "fid": 1.4941559327130562,
+    "is_mean": 231.85111333535428,
+    "is_std": 2.985331004216875
+  },
+  "vs_adm_mu_sigma": {
+    "fid": 1.6786720515247566
+  },
+  "fd_jit_stats_vs_adm_stats": 0.10179148068056065,
+  "jit_stats_mu_maxabs_diff_vs_adm": 0.030885828010768668
+}

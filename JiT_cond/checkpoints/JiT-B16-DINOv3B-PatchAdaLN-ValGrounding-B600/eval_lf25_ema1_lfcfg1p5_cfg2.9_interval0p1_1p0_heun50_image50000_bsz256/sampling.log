@@ -1,0 +1,643 @@
+| distributed init (rank 3): env://, gpu 3
+[rank3]:[W1120 21:28:10.585710844 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 3]  using GPU 3 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 1): env://, gpu 1
+[rank1]:[W1120 21:28:10.666743108 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 0): env://, gpu 0
+| distributed init (rank 5): env://, gpu 5
+[rank5]:[W1120 21:28:11.442093562 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 5]  using GPU 5 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 2): env://, gpu 2
+[rank2]:[W1120 21:28:11.690113484 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 2]  using GPU 2 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[rank0]:[W1120 21:28:11.712352896 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 7): env://, gpu 7
+[rank7]:[W1120 21:28:11.139547949 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 7]  using GPU 7 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 6): env://, gpu 6
+[rank6]:[W1120 21:28:12.284919147 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 6]  using GPU 6 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 4): env://, gpu 4
+[rank4]:[W1120 21:28:12.342644875 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 4]  using GPU 4 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[21:28:13.089603] Job directory: /data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce
+[21:28:13.091120] Arguments:
+Namespace(model='JiT-B/16',
+img_size=256,
+attn_dropout=0.0,
+proj_dropout=0.0,
+use_grounding=True,
+grounding_model='dinov3_vitb16',
+grounding_dim=768,
+grounding_weights='/data0/pretrain_models/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth',
+grounding_repo='/data0/zhangruobei/Work/Pixel_Diffusion/Ours_BaseT_rmsnorm2_Residual_1016_normft_1028/SSL_code/dinov3',
+grounding_source='lf',
+lf_ckpt='/data0/zhangruobei/Work/LatentForcing/lfjit-l-200.pth',
+lf_ema='1',
+lf_latent_steps=25,
+lf_sampling_method='heun',
+lf_dino_max_t=1.0,
+lf_gen_shift_dino=1.0,
+lf_gen_shift_pixel=1.0,
+lf_cfg=1.5,
+lf_interval_min=0.0,
+lf_interval_max=1.0,
+lf_guidance='cfg',
+lf_gen_bsz=128,
+ground_drop_prob=0.0,
+auto_grounding=None,
+epochs=80,
+warmup_epochs=5,
+batch_size=128,
+lr=None,
+blr=5e-05,
+min_lr=0.0,
+lr_schedule='constant',
+weight_decay=0.0,
+ema_decay1=0.9999,
+ema_decay2=0.9996,
+P_mean=-0.8,
+P_std=0.8,
+noise_scale=1.0,
+t_eps=0.05,
+label_drop_prob=0.1,
+seed=0,
+start_epoch=0,
+num_workers=12,
+pin_mem=True,
+sampling_method='heun',
+num_sampling_steps=50,
+cfg=2.9,
+interval_min=0.1,
+interval_max=1.0,
+num_images=50000,
+eval_freq=40,
+online_eval=False,
+evaluate_gen=True,
+gen_bsz=256,
+data_path='/data0/datasets/imagenet',
+class_num=1000,
+output_dir='/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond/checkpoints/JiT-B16-DINOv3B-PatchAdaLN-ValGrounding-B600/eval_lf25_ema1_lfcfg1p5_cfg2.9_interval0p1_1p0_heun50_image50000_bsz256',
+resume='/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond/checkpoints/JiT-B16-DINOv3B-PatchAdaLN-ValGrounding-B600',
+checkpoint='/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond/checkpoints/JiT-B16-DINOv3B-PatchAdaLN-ValGrounding-B600/checkpoint-101.pth',
+save_last_freq=5,
+save_interval=20,
+log_freq=100,
+device='cuda',
+world_size=8,
+local_rank=-1,
+dist_on_itp=False,
+dist_url='env://',
+rank=0,
+gpu=0,
+distributed=True,
+dist_backend='nccl')
+[21:28:16.172837] Dataset ImageFolder
+    Number of datapoints: 1281167
+    Root location: /data0/datasets/imagenet/train
+    StandardTransform
+Transform: Compose(
+               Lambda()
+               RandomHorizontalFlip(p=0.5)
+               PILToTensor()
+           )
+[21:28:16.173007] Sampler_train = <torch.utils.data.distributed.DistributedSampler object at 0x71d2ec1e1570>
+[21:28:18.650618] Model = Denoiser(
+  (net): JiT(
+    (t_embedder): TimestepEmbedder(
+      (mlp): Sequential(
+        (0): Linear(in_features=256, out_features=768, bias=True)
+        (1): SiLU()
+        (2): Linear(in_features=768, out_features=768, bias=True)
+      )
+    )
+    (y_embedder): LabelEmbedder(
+      (embedding_table): Embedding(1001, 768)
+    )
+    (grounding_proj): Linear(in_features=768, out_features=768, bias=True)
+    (x_embedder): BottleneckPatchEmbed(
+      (proj1): Conv2d(3, 128, kernel_size=(16, 16), stride=(16, 16), bias=False)
+      (proj2): Conv2d(128, 768, kernel_size=(1, 1), stride=(1, 1))
+    )
+    (feat_rope): VisionRotaryEmbeddingFast()
+    (feat_rope_incontext): VisionRotaryEmbeddingFast()
+    (blocks): ModuleList(
+      (0-11): 12 x JiTBlock(
+        (norm1): RMSNorm()
+        (attn): Attention(
+          (q_norm): RMSNorm()
+          (k_norm): RMSNorm()
+          (qkv): Linear(in_features=768, out_features=2304, bias=True)
+          (attn_drop): Dropout(p=0.0, inplace=False)
+          (proj): Linear(in_features=768, out_features=768, bias=True)
+          (proj_drop): Dropout(p=0.0, inplace=False)
+        )
+        (norm2): RMSNorm()
+        (mlp): SwiGLUFFN(
+          (w12): Linear(in_features=768, out_features=4096, bias=True)
+          (w3): Linear(in_features=2048, out_features=768, bias=True)
+          (ffn_dropout): Dropout(p=0.0, inplace=False)
+        )
+        (adaLN_modulation): Sequential(
+          (0): SiLU()
+          (1): Linear(in_features=768, out_features=4608, bias=True)
+        )
+      )
+    )
+    (final_layer): FinalLayer(
+      (norm_final): RMSNorm()
+      (linear): Linear(in_features=768, out_features=768, bias=True)
+      (adaLN_modulation): Sequential(
+        (0): SiLU()
+        (1): Linear(in_features=768, out_features=1536, bias=True)
+      )
+    )
+  )
+  (grounding_encoder): DINOv3GroundingEncoder(
+    (model): DinoVisionTransformer(
+      (patch_embed): PatchEmbed(
+        (proj): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16))
+        (norm): Identity()
+      )
+      (rope_embed): RopePositionEmbedding()
+      (blocks): ModuleList(
+        (0-11): 12 x SelfAttentionBlock(
+          (norm1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (attn): SelfAttention(
+            (qkv): LinearKMaskedBias(in_features=768, out_features=2304, bias=True)
+            (attn_drop): Dropout(p=0.0, inplace=False)
+            (proj): Linear(in_features=768, out_features=768, bias=True)
+            (proj_drop): Dropout(p=0.0, inplace=False)
+          )
+          (ls1): LayerScale()
+          (norm2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (ls2): LayerScale()
+        )
+      )
+      (norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+      (head): Identity()
+    )
+  )
+)
+[21:28:18.652525] Number of trainable parameters: 131.714304M
+[21:28:19.220857] Base lr: 5.00e-05
+[21:28:19.220898] Actual lr: 2.00e-04
+[21:28:19.220908] Effective batch size: 1024
+[21:28:19.248334] AdamW (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.95)
+    capturable: False
+    decoupled_weight_decay: True
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: None
+    lr: 0.0002
+    maximize: False
+    weight_decay: 0.0
+
+Parameter Group 1
+    amsgrad: False
+    betas: (0.9, 0.95)
+    capturable: False
+    decoupled_weight_decay: True
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: None
+    lr: 0.0002
+    maximize: False
+    weight_decay: 0.0
+)
+[21:28:21.545794] Resumed checkpoint from /data0/zhangruobei/Work/jit_cond_ablation/JiT_cond/checkpoints/JiT-B16-DINOv3B-PatchAdaLN-ValGrounding-B600
+/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/random.py:187: UserWarning: CUDA reports that you have 8 available devices, and you have used fork_rng without explicitly specifying which devices are being used. For safety, we initialize *every* CUDA device by default, which can be quite slow if you have a lot of CUDAs. If you know that you are only making use of a few CUDA devices, set the environment variable CUDA_VISIBLE_DEVICES or the 'devices' keyword argument of fork_rng with the set of devices you are actually using. For example, if you are using CPU only, set device.upper()_VISIBLE_DEVICES= or devices=[]; if you are using device 0 only, set CUDA_VISIBLE_DEVICES=0 or devices=[0].  To initialize all devices and suppress this warning, set the 'devices' keyword argument to `range(torch.cuda.device_count())`.
+  warnings.warn(message)
+/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/random.py:187: UserWarning: CUDA reports that you have 8 available devices, and you have used fork_rng without explicitly specifying which devices are being used. For safety, we initialize *every* CUDA device by default, which can be quite slow if you have a lot of CUDAs. If you know that you are only making use of a few CUDA devices, set the environment variable CUDA_VISIBLE_DEVICES or the 'devices' keyword argument of fork_rng with the set of devices you are actually using. For example, if you are using CPU only, set device.upper()_VISIBLE_DEVICES= or devices=[]; if you are using device 0 only, set CUDA_VISIBLE_DEVICES=0 or devices=[0].  To initialize all devices and suppress this warning, set the 'devices' keyword argument to `range(torch.cuda.device_count())`.
+  warnings.warn(message)
+/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/random.py:187: UserWarning: CUDA reports that you have 8 available devices, and you have used fork_rng without explicitly specifying which devices are being used. For safety, we initialize *every* CUDA device by default, which can be quite slow if you have a lot of CUDAs. If you know that you are only making use of a few CUDA devices, set the environment variable CUDA_VISIBLE_DEVICES or the 'devices' keyword argument of fork_rng with the set of devices you are actually using. For example, if you are using CPU only, set device.upper()_VISIBLE_DEVICES= or devices=[]; if you are using device 0 only, set CUDA_VISIBLE_DEVICES=0 or devices=[0].  To initialize all devices and suppress this warning, set the 'devices' keyword argument to `range(torch.cuda.device_count())`.
+  warnings.warn(message)
+/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/random.py:187: UserWarning: CUDA reports that you have 8 available devices, and you have used fork_rng without explicitly specifying which devices are being used. For safety, we initialize *every* CUDA device by default, which can be quite slow if you have a lot of CUDAs. If you know that you are only making use of a few CUDA devices, set the environment variable CUDA_VISIBLE_DEVICES or the 'devices' keyword argument of fork_rng with the set of devices you are actually using. For example, if you are using CPU only, set device.upper()_VISIBLE_DEVICES= or devices=[]; if you are using device 0 only, set CUDA_VISIBLE_DEVICES=0 or devices=[0].  To initialize all devices and suppress this warning, set the 'devices' keyword argument to `range(torch.cuda.device_count())`.
+  warnings.warn(message)
+/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/random.py:187: UserWarning: CUDA reports that you have 8 available devices, and you have used fork_rng without explicitly specifying which devices are being used. For safety, we initialize *every* CUDA device by default, which can be quite slow if you have a lot of CUDAs. If you know that you are only making use of a few CUDA devices, set the environment variable CUDA_VISIBLE_DEVICES or the 'devices' keyword argument of fork_rng with the set of devices you are actually using. For example, if you are using CPU only, set device.upper()_VISIBLE_DEVICES= or devices=[]; if you are using device 0 only, set CUDA_VISIBLE_DEVICES=0 or devices=[0].  To initialize all devices and suppress this warning, set the 'devices' keyword argument to `range(torch.cuda.device_count())`.
+  warnings.warn(message)
+[21:28:22.045154] Loaded optimizer & scaler state!
+[21:28:22.046196] Evaluating checkpoint at 101 epoch
+/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/random.py:187: UserWarning: CUDA reports that you have 8 available devices, and you have used fork_rng without explicitly specifying which devices are being used. For safety, we initialize *every* CUDA device by default, which can be quite slow if you have a lot of CUDAs. If you know that you are only making use of a few CUDA devices, set the environment variable CUDA_VISIBLE_DEVICES or the 'devices' keyword argument of fork_rng with the set of devices you are actually using. For example, if you are using CPU only, set device.upper()_VISIBLE_DEVICES= or devices=[]; if you are using device 0 only, set CUDA_VISIBLE_DEVICES=0 or devices=[0].  To initialize all devices and suppress this warning, set the 'devices' keyword argument to `range(torch.cuda.device_count())`.
+  warnings.warn(message)
+[21:28:22.048386] Save to: /data0/zhangruobei/Work/jit_cond_ablation/JiT_cond/checkpoints/JiT-B16-DINOv3B-PatchAdaLN-ValGrounding-B600/eval_lf25_ema1_lfcfg1p5_cfg2.9_interval0p1_1p0_heun50_image50000_bsz256/heun-steps50-cfg2.9-interval0.1-1.0-image50000-res256
+/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/random.py:187: UserWarning: CUDA reports that you have 8 available devices, and you have used fork_rng without explicitly specifying which devices are being used. For safety, we initialize *every* CUDA device by default, which can be quite slow if you have a lot of CUDAs. If you know that you are only making use of a few CUDA devices, set the environment variable CUDA_VISIBLE_DEVICES or the 'devices' keyword argument of fork_rng with the set of devices you are actually using. For example, if you are using CPU only, set device.upper()_VISIBLE_DEVICES= or devices=[]; if you are using device 0 only, set CUDA_VISIBLE_DEVICES=0 or devices=[0].  To initialize all devices and suppress this warning, set the 'devices' keyword argument to `range(torch.cuda.device_count())`.
+  warnings.warn(message)
+[21:28:22.104819] Switch to ema
+[21:28:22.112834] Generation step 0/25
+/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/random.py:187: UserWarning: CUDA reports that you have 8 available devices, and you have used fork_rng without explicitly specifying which devices are being used. For safety, we initialize *every* CUDA device by default, which can be quite slow if you have a lot of CUDAs. If you know that you are only making use of a few CUDA devices, set the environment variable CUDA_VISIBLE_DEVICES or the 'devices' keyword argument of fork_rng with the set of devices you are actually using. For example, if you are using CPU only, set device.upper()_VISIBLE_DEVICES= or devices=[]; if you are using device 0 only, set CUDA_VISIBLE_DEVICES=0 or devices=[0].  To initialize all devices and suppress this warning, set the 'devices' keyword argument to `range(torch.cuda.device_count())`.
+  warnings.warn(message)
+[21:30:53.116719] Generation step 1/25
+[21:33:14.631346] Generation step 2/25
+[21:35:36.250043] Generation step 3/25
+[21:37:57.673322] Generation step 4/25
+[21:40:19.213140] Generation step 5/25
+W1120 21:41:13.163000 4102190 site-packages/torch/distributed/elastic/agent/server/api.py:719] Received Signals.SIGINT death signal, shutting down workers
+W1120 21:41:13.165000 4102190 site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 4102200 closing signal SIGINT
+W1120 21:41:13.166000 4102190 site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 4102201 closing signal SIGINT
+W1120 21:41:13.167000 4102190 site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 4102202 closing signal SIGINT
+W1120 21:41:13.167000 4102190 site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 4102203 closing signal SIGINT
+W1120 21:41:13.168000 4102190 site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 4102204 closing signal SIGINT
+W1120 21:41:13.168000 4102190 site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 4102205 closing signal SIGINT
+W1120 21:41:13.169000 4102190 site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 4102206 closing signal SIGINT
+W1120 21:41:13.169000 4102190 site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 4102207 closing signal SIGINT
+[rank6]: Traceback (most recent call last):
+[rank6]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 324, in <module>
+[rank6]:     main(args)
+[rank6]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 275, in main
+[rank6]:     evaluate(model_without_ddp, args, 0, batch_size=args.gen_bsz, log_writer=log_writer)
+[rank6]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/engine_jit.py", line 152, in evaluate
+[rank6]:     sampled_images = model_without_ddp.generate(labels_gen, **gen_kwargs)
+[rank6]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank6]:     return func(*args, **kwargs)
+[rank6]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 202, in generate
+[rank6]:     grounding_tokens = self._lf_grounding_call(labels)
+[rank6]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 163, in _lf_grounding_call
+[rank6]:     return self._lf_grounding(labels)
+[rank6]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank6]:     return func(*args, **kwargs)
+[rank6]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 253, in __call__
+[rank6]:     latent = self.sampler.sample_latent(labels, chunk_size=self.chunk_size)
+[rank6]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank6]:     return func(*args, **kwargs)
+[rank6]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in sample_latent
+[rank6]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank6]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in <listcomp>
+[rank6]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank6]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank6]:     return func(*args, **kwargs)
+[rank6]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 221, in _sample_chunk
+[rank6]:     z = stepper(z, t, t_next, labels)
+[rank6]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 177, in _heun
+[rank6]:     v_t = self._velocity(z, t, labels)
+[rank6]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 153, in _velocity
+[rank6]:     x_cond = self.net(z, t_flat, labels)
+[rank6]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank6]:     return self._call_impl(*args, **kwargs)
+[rank6]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank6]:     return forward_call(*args, **kwargs)
+[rank6]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 421, in forward
+[rank6]:     t_emb_pixel = self.t_pixel_embedder(t[0])  # t[0]:[B] -> [B,C]，pixel 分支的扩散时间。
+[rank6]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank6]:     return self._call_impl(*args, **kwargs)
+[rank6]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank6]:     return forward_call(*args, **kwargs)
+[rank6]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 114, in forward
+[rank6]:     t_freq = self.timestep_embedding(t, self.frequency_embedding_size).to(t.dtype)  # [B,F]，恢复时间张量的数据类型。
+[rank6]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 104, in timestep_embedding
+[rank6]:     freqs = torch.exp(  # 对数间隔频率；无可训练参数。
+[rank6]: KeyboardInterrupt
+[rank3]: Traceback (most recent call last):
+[rank3]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 324, in <module>
+[rank3]:     main(args)
+[rank3]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 275, in main
+[rank3]:     evaluate(model_without_ddp, args, 0, batch_size=args.gen_bsz, log_writer=log_writer)
+[rank3]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/engine_jit.py", line 152, in evaluate
+[rank3]:     sampled_images = model_without_ddp.generate(labels_gen, **gen_kwargs)
+[rank3]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank3]:     return func(*args, **kwargs)
+[rank3]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 202, in generate
+[rank3]:     grounding_tokens = self._lf_grounding_call(labels)
+[rank3]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 163, in _lf_grounding_call
+[rank3]:     return self._lf_grounding(labels)
+[rank3]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank3]:     return func(*args, **kwargs)
+[rank3]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 253, in __call__
+[rank3]:     latent = self.sampler.sample_latent(labels, chunk_size=self.chunk_size)
+[rank3]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank3]:     return func(*args, **kwargs)
+[rank3]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in sample_latent
+[rank3]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank3]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in <listcomp>
+[rank3]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank3]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank3]:     return func(*args, **kwargs)
+[rank3]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 221, in _sample_chunk
+[rank3]:     z = stepper(z, t, t_next, labels)
+[rank3]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 179, in _heun
+[rank3]:     v_next = self._velocity(z_euler, t_next, labels)
+[rank3]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 153, in _velocity
+[rank3]:     x_cond = self.net(z, t_flat, labels)
+[rank3]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank3]:     return self._call_impl(*args, **kwargs)
+[rank3]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank3]:     return forward_call(*args, **kwargs)
+[rank3]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 421, in forward
+[rank3]:     t_emb_pixel = self.t_pixel_embedder(t[0])  # t[0]:[B] -> [B,C]，pixel 分支的扩散时间。
+[rank3]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank3]:     return self._call_impl(*args, **kwargs)
+[rank3]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank3]:     return forward_call(*args, **kwargs)
+[rank3]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 114, in forward
+[rank3]:     t_freq = self.timestep_embedding(t, self.frequency_embedding_size).to(t.dtype)  # [B,F]，恢复时间张量的数据类型。
+[rank3]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 104, in timestep_embedding
+[rank3]:     freqs = torch.exp(  # 对数间隔频率；无可训练参数。
+[rank3]: KeyboardInterrupt
+[rank7]: Traceback (most recent call last):
+[rank7]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 324, in <module>
+[rank7]:     main(args)
+[rank7]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 275, in main
+[rank7]:     evaluate(model_without_ddp, args, 0, batch_size=args.gen_bsz, log_writer=log_writer)
+[rank7]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/engine_jit.py", line 152, in evaluate
+[rank7]:     sampled_images = model_without_ddp.generate(labels_gen, **gen_kwargs)
+[rank7]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank7]:     return func(*args, **kwargs)
+[rank7]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 202, in generate
+[rank7]:     grounding_tokens = self._lf_grounding_call(labels)
+[rank7]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 163, in _lf_grounding_call
+[rank7]:     return self._lf_grounding(labels)
+[rank7]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank7]:     return func(*args, **kwargs)
+[rank7]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 253, in __call__
+[rank7]:     latent = self.sampler.sample_latent(labels, chunk_size=self.chunk_size)
+[rank7]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank7]:     return func(*args, **kwargs)
+[rank7]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in sample_latent
+[rank7]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank7]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in <listcomp>
+[rank7]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank7]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank7]:     return func(*args, **kwargs)
+[rank7]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 221, in _sample_chunk
+[rank7]:     z = stepper(z, t, t_next, labels)
+[rank7]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 177, in _heun
+[rank7]:     v_t = self._velocity(z, t, labels)
+[rank7]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 161, in _velocity
+[rank7]:     x_ref = self.net(z, t_flat, null_labels)
+[rank7]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank7]:     return self._call_impl(*args, **kwargs)
+[rank7]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank7]:     return forward_call(*args, **kwargs)
+[rank7]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 421, in forward
+[rank7]:     t_emb_pixel = self.t_pixel_embedder(t[0])  # t[0]:[B] -> [B,C]，pixel 分支的扩散时间。
+[rank7]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank7]:     return self._call_impl(*args, **kwargs)
+[rank7]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank7]:     return forward_call(*args, **kwargs)
+[rank7]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 114, in forward
+[rank7]:     t_freq = self.timestep_embedding(t, self.frequency_embedding_size).to(t.dtype)  # [B,F]，恢复时间张量的数据类型。
+[rank7]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 104, in timestep_embedding
+[rank7]:     freqs = torch.exp(  # 对数间隔频率；无可训练参数。
+[rank7]: KeyboardInterrupt
+[rank2]: Traceback (most recent call last):
+[rank2]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 324, in <module>
+[rank2]:     main(args)
+[rank2]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 275, in main
+[rank2]:     evaluate(model_without_ddp, args, 0, batch_size=args.gen_bsz, log_writer=log_writer)
+[rank2]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/engine_jit.py", line 152, in evaluate
+[rank2]:     sampled_images = model_without_ddp.generate(labels_gen, **gen_kwargs)
+[rank2]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank2]:     return func(*args, **kwargs)
+[rank2]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 202, in generate
+[rank2]:     grounding_tokens = self._lf_grounding_call(labels)
+[rank2]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 163, in _lf_grounding_call
+[rank2]:     return self._lf_grounding(labels)
+[rank2]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank2]:     return func(*args, **kwargs)
+[rank2]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 253, in __call__
+[rank2]:     latent = self.sampler.sample_latent(labels, chunk_size=self.chunk_size)
+[rank2]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank2]:     return func(*args, **kwargs)
+[rank2]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in sample_latent
+[rank2]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank2]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in <listcomp>
+[rank2]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank2]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank2]:     return func(*args, **kwargs)
+[rank2]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 221, in _sample_chunk
+[rank2]:     z = stepper(z, t, t_next, labels)
+[rank2]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 179, in _heun
+[rank2]:     v_next = self._velocity(z_euler, t_next, labels)
+[rank2]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 161, in _velocity
+[rank2]:     x_ref = self.net(z, t_flat, null_labels)
+[rank2]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank2]:     return self._call_impl(*args, **kwargs)
+[rank2]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank2]:     return forward_call(*args, **kwargs)
+[rank2]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 421, in forward
+[rank2]:     t_emb_pixel = self.t_pixel_embedder(t[0])  # t[0]:[B] -> [B,C]，pixel 分支的扩散时间。
+[rank2]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank2]:     return self._call_impl(*args, **kwargs)
+[rank2]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank2]:     return forward_call(*args, **kwargs)
+[rank2]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 114, in forward
+[rank2]:     t_freq = self.timestep_embedding(t, self.frequency_embedding_size).to(t.dtype)  # [B,F]，恢复时间张量的数据类型。
+[rank2]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 104, in timestep_embedding
+[rank2]:     freqs = torch.exp(  # 对数间隔频率；无可训练参数。
+[rank2]: KeyboardInterrupt
+[rank5]: Traceback (most recent call last):
+[rank5]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 324, in <module>
+[rank5]:     main(args)
+[rank5]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 275, in main
+[rank5]:     evaluate(model_without_ddp, args, 0, batch_size=args.gen_bsz, log_writer=log_writer)
+[rank5]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/engine_jit.py", line 152, in evaluate
+[rank5]:     sampled_images = model_without_ddp.generate(labels_gen, **gen_kwargs)
+[rank5]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank5]:     return func(*args, **kwargs)
+[rank5]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 202, in generate
+[rank5]:     grounding_tokens = self._lf_grounding_call(labels)
+[rank5]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 163, in _lf_grounding_call
+[rank5]:     return self._lf_grounding(labels)
+[rank5]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank5]:     return func(*args, **kwargs)
+[rank5]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 253, in __call__
+[rank5]:     latent = self.sampler.sample_latent(labels, chunk_size=self.chunk_size)
+[rank5]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank5]:     return func(*args, **kwargs)
+[rank5]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in sample_latent
+[rank5]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank5]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in <listcomp>
+[rank5]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank5]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank5]:     return func(*args, **kwargs)
+[rank5]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 221, in _sample_chunk
+[rank5]:     z = stepper(z, t, t_next, labels)
+[rank5]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 179, in _heun
+[rank5]:     v_next = self._velocity(z_euler, t_next, labels)
+[rank5]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 153, in _velocity
+[rank5]:     x_cond = self.net(z, t_flat, labels)
+[rank5]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank5]:     return self._call_impl(*args, **kwargs)
+[rank5]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank5]:     return forward_call(*args, **kwargs)
+[rank5]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 421, in forward
+[rank5]:     t_emb_pixel = self.t_pixel_embedder(t[0])  # t[0]:[B] -> [B,C]，pixel 分支的扩散时间。
+[rank5]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank5]:     return self._call_impl(*args, **kwargs)
+[rank5]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank5]:     return forward_call(*args, **kwargs)
+[rank5]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 114, in forward
+[rank5]:     t_freq = self.timestep_embedding(t, self.frequency_embedding_size).to(t.dtype)  # [B,F]，恢复时间张量的数据类型。
+[rank5]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 104, in timestep_embedding
+[rank5]:     freqs = torch.exp(  # 对数间隔频率；无可训练参数。
+[rank5]: KeyboardInterrupt
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 324, in <module>
+[rank0]:     main(args)
+[rank0]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 275, in main
+[rank0]:     evaluate(model_without_ddp, args, 0, batch_size=args.gen_bsz, log_writer=log_writer)
+[rank0]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/engine_jit.py", line 152, in evaluate
+[rank0]:     sampled_images = model_without_ddp.generate(labels_gen, **gen_kwargs)
+[rank0]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank0]:     return func(*args, **kwargs)
+[rank0]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 202, in generate
+[rank0]:     grounding_tokens = self._lf_grounding_call(labels)
+[rank0]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 163, in _lf_grounding_call
+[rank0]:     return self._lf_grounding(labels)
+[rank0]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank0]:     return func(*args, **kwargs)
+[rank0]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 253, in __call__
+[rank0]:     latent = self.sampler.sample_latent(labels, chunk_size=self.chunk_size)
+[rank0]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank0]:     return func(*args, **kwargs)
+[rank0]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in sample_latent
+[rank0]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank0]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in <listcomp>
+[rank0]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank0]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank0]:     return func(*args, **kwargs)
+[rank0]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 221, in _sample_chunk
+[rank0]:     z = stepper(z, t, t_next, labels)
+[rank0]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 177, in _heun
+[rank0]:     v_t = self._velocity(z, t, labels)
+[rank0]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 153, in _velocity
+[rank0]:     x_cond = self.net(z, t_flat, labels)
+[rank0]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 421, in forward
+[rank0]:     t_emb_pixel = self.t_pixel_embedder(t[0])  # t[0]:[B] -> [B,C]，pixel 分支的扩散时间。
+[rank0]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 114, in forward
+[rank0]:     t_freq = self.timestep_embedding(t, self.frequency_embedding_size).to(t.dtype)  # [B,F]，恢复时间张量的数据类型。
+[rank0]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 104, in timestep_embedding
+[rank0]:     freqs = torch.exp(  # 对数间隔频率；无可训练参数。
+[rank0]: KeyboardInterrupt
+[rank4]: Traceback (most recent call last):
+[rank4]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 324, in <module>
+[rank4]:     main(args)
+[rank4]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 275, in main
+[rank4]:     evaluate(model_without_ddp, args, 0, batch_size=args.gen_bsz, log_writer=log_writer)
+[rank4]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/engine_jit.py", line 152, in evaluate
+[rank4]:     sampled_images = model_without_ddp.generate(labels_gen, **gen_kwargs)
+[rank4]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank4]:     return func(*args, **kwargs)
+[rank4]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 202, in generate
+[rank4]:     grounding_tokens = self._lf_grounding_call(labels)
+[rank4]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 163, in _lf_grounding_call
+[rank4]:     return self._lf_grounding(labels)
+[rank4]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank4]:     return func(*args, **kwargs)
+[rank4]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 253, in __call__
+[rank4]:     latent = self.sampler.sample_latent(labels, chunk_size=self.chunk_size)
+[rank4]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank4]:     return func(*args, **kwargs)
+[rank4]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in sample_latent
+[rank4]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank4]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in <listcomp>
+[rank4]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank4]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank4]:     return func(*args, **kwargs)
+[rank4]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 221, in _sample_chunk
+[rank4]:     z = stepper(z, t, t_next, labels)
+[rank4]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 179, in _heun
+[rank4]:     v_next = self._velocity(z_euler, t_next, labels)
+[rank4]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 153, in _velocity
+[rank4]:     x_cond = self.net(z, t_flat, labels)
+[rank4]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank4]:     return self._call_impl(*args, **kwargs)
+[rank4]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank4]:     return forward_call(*args, **kwargs)
+[rank4]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 421, in forward
+[rank4]:     t_emb_pixel = self.t_pixel_embedder(t[0])  # t[0]:[B] -> [B,C]，pixel 分支的扩散时间。
+[rank4]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank4]:     return self._call_impl(*args, **kwargs)
+[rank4]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank4]:     return forward_call(*args, **kwargs)
+[rank4]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 114, in forward
+[rank4]:     t_freq = self.timestep_embedding(t, self.frequency_embedding_size).to(t.dtype)  # [B,F]，恢复时间张量的数据类型。
+[rank4]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 104, in timestep_embedding
+[rank4]:     freqs = torch.exp(  # 对数间隔频率；无可训练参数。
+[rank4]: KeyboardInterrupt
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 324, in <module>
+[rank1]:     main(args)
+[rank1]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/main_jit.py", line 275, in main
+[rank1]:     evaluate(model_without_ddp, args, 0, batch_size=args.gen_bsz, log_writer=log_writer)
+[rank1]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/engine_jit.py", line 152, in evaluate
+[rank1]:     sampled_images = model_without_ddp.generate(labels_gen, **gen_kwargs)
+[rank1]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank1]:     return func(*args, **kwargs)
+[rank1]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 202, in generate
+[rank1]:     grounding_tokens = self._lf_grounding_call(labels)
+[rank1]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/denoiser.py", line 163, in _lf_grounding_call
+[rank1]:     return self._lf_grounding(labels)
+[rank1]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank1]:     return func(*args, **kwargs)
+[rank1]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 253, in __call__
+[rank1]:     latent = self.sampler.sample_latent(labels, chunk_size=self.chunk_size)
+[rank1]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank1]:     return func(*args, **kwargs)
+[rank1]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in sample_latent
+[rank1]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank1]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 196, in <listcomp>
+[rank1]:     [self._sample_chunk(labels[i:i + chunk_size])
+[rank1]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+[rank1]:     return func(*args, **kwargs)
+[rank1]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 221, in _sample_chunk
+[rank1]:     z = stepper(z, t, t_next, labels)
+[rank1]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 179, in _heun
+[rank1]:     v_next = self._velocity(z_euler, t_next, labels)
+[rank1]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/sampler.py", line 153, in _velocity
+[rank1]:     x_cond = self.net(z, t_flat, labels)
+[rank1]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank1]:     return self._call_impl(*args, **kwargs)
+[rank1]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank1]:     return forward_call(*args, **kwargs)
+[rank1]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 421, in forward
+[rank1]:     t_emb_pixel = self.t_pixel_embedder(t[0])  # t[0]:[B] -> [B,C]，pixel 分支的扩散时间。
+[rank1]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+[rank1]:     return self._call_impl(*args, **kwargs)
+[rank1]:   File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+[rank1]:     return forward_call(*args, **kwargs)
+[rank1]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 114, in forward
+[rank1]:     t_freq = self.timestep_embedding(t, self.frequency_embedding_size).to(t.dtype)  # [B,F]，恢复时间张量的数据类型。
+[rank1]:   File "/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond_latentforce/latent_force/model_cot.py", line 104, in timestep_embedding
+[rank1]:     freqs = torch.exp(  # 对数间隔频率；无可训练参数。
+[rank1]: KeyboardInterrupt
+[rank0]:[W1120 21:41:14.184752637 ProcessGroupNCCL.cpp:1476] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+Traceback (most recent call last):
+  File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/distributed/run.py", line 896, in <module>
+    main()
+  File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 355, in wrapper
+    return f(*args, **kwargs)
+  File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/distributed/run.py", line 892, in main
+    run(args)
+  File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/distributed/run.py", line 883, in run
+    elastic_launch(
+  File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 139, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 261, in launch_agent
+    result = agent.run()
+  File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/distributed/elastic/metrics/api.py", line 138, in wrapper
+    result = f(*args, **kwargs)
+  File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/distributed/elastic/agent/server/api.py", line 711, in run
+    result = self._invoke_run(role)
+  File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/distributed/elastic/agent/server/api.py", line 870, in _invoke_run
+    time.sleep(monitor_interval)
+  File "/data0/zhangruobei/anaconda3/envs/irepa/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/api.py", line 84, in _terminate_process_handler
+    raise SignalException(f"Process {os.getpid()} got signal: {sigval}", sigval=sigval)
+torch.distributed.elastic.multiprocessing.api.SignalException: Process 4102190 got signal: 2

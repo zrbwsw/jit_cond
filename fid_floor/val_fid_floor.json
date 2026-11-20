@@ -1,0 +1,17 @@
+{
+  "num_images": 50000,
+  "preprocess": "PIL RGB -> util.crop.center_crop_arr(256) -> uint8",
+  "torch_fidelity": "0.4.0-beta",
+  "device": "cpu",
+  "feature_extraction_seconds": 4.6,
+  "vs_jit_in256_stats": {
+    "fid": 1.4941559327130562,
+    "is_mean": 231.85111333535428,
+    "is_std": 2.985331004216875
+  },
+  "vs_adm_mu_sigma": {
+    "fid": 1.6786720515247566
+  },
+  "fd_jit_stats_vs_adm_stats": 0.10179148068056065,
+  "jit_stats_mu_maxabs_diff_vs_adm": 0.030885828010768668
+}

@@ -44,6 +44,11 @@ def get_args_parser():
     parser.add_argument('--grounding_source', default='val', choices=['val', 'probe', 'none'], type=str,
                         help='采样时语义 token 的来源：val = 验证集同类真实图片（clean semantic 上限实验）；'
                              'probe = 先用 t+y 估计 x_hat 再编码；none = 纯 t+y 采样')
+    parser.add_argument('--val_grounding_level', default='instance', choices=['instance', 'class'], type=str,
+                        help='grounding_source=val 时的配对粒度：instance = 第 g 张生成图用该类第 g%%50 张验证图；'
+                             'class = 每类用固定种子随机抽一张验证图，全类 50 个样本共用')
+    parser.add_argument('--class_ref_seed', default=0, type=int,
+                        help='class-level 抽取验证图的随机种子，与 rank 无关')
     parser.add_argument('--ground_drop_prob', default=0.0, type=float,
                         help='保留 label 但关闭语义条件的样本比例；仅 grounding_source=probe 时有用')
     parser.add_argument('--auto_grounding', action=argparse.BooleanOptionalAction, default=None,
