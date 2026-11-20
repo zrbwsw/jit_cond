@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from model_jit import JiT_models
 from latent_force.dino_dit import DinoDiT_models
-from latent_force.dinov2_encoder import DINOv2LatentEncoder, DEFAULT_STAT_PATH
+from latent_force.dinov2_encoder import DINOLatentEncoder
 
 
 class Denoiser(nn.Module):
@@ -61,9 +61,11 @@ class Denoiser(nn.Module):
                 attn_drop=args.attn_dropout,
                 proj_drop=args.proj_dropout,
             )
-            self.dino_encoder = DINOv2LatentEncoder(
-                dinov2_path=getattr(args, "dinov2_path", "facebook/dinov2-with-registers-base"),
-                normalization_stat_path=getattr(args, "dino_stat_path", None) or DEFAULT_STAT_PATH,
+            self.dino_encoder = DINOLatentEncoder(
+                encoder_type=getattr(args, "dino_encoder", "dinov2b"),
+                weights_path=getattr(args, "dinov3_weights", None) or None,
+                repo=getattr(args, "dinov3_repo", None) or None,
+                stat_path=getattr(args, "dino_stat_path", None) or None,
             )
             self.dino_encoder.eval()
         else:

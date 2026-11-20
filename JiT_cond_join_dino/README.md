@@ -31,22 +31,25 @@ instance-level 地产生：
 两个网络参数独立，不共享 trunk；每个样本两路都监督，
 `loss = loss_jit + dino_weight · loss_dino`（`dino_weight=0.333`，follow LF）。
 
-### DINOv2 latent 空间（与 Latent Forcing 完全一致）
+### DINO latent 空间
 
-`latent_force/dinov2_encoder.py` 复刻 LatentForcing 的 `RAE.encode`：
+`latent_force/dinov2_encoder.py` 提供统一的冻结编码器，`--dino_encoder` 选择：
+
+* `dinov2b`：DINOv2-reg-B/14（facebook/dinov2-with-registers-base），bicubic 224²
+  输入，丢 1 CLS + 4 register，最后 LayerNorm 去 affine；
+* `dinov3b`：DINOv3-B/16（SHA 73cec8be，与 JiT_cond 同一份权重），256² 输入即
+  16×16 网格，取 `x_norm_patchtokens`，最后 norm 去 affine。
+
+两者归一化统一为
 
 ```text
-clean 图 [0,1] → bicubic 224² → ImageNet mean/std
-→ facebook/dinov2-with-registers-base（最后 LayerNorm 去掉 affine）
-→ 丢 1 CLS + 4 register → [B,768,16,16]
-→ (z − 0) / sqrt(var + 1e-5)      # RAE ImageNet-1k 统计，mean=None
-→ × 0.485                         # match_pixel_norm
+(z − mean) / sqrt(var + 1e-5)
 ```
 
-该 encoder 与 LF 预训练权重 `lfjit-l-200.pth` 内置的 `dino.*` 在同一张图上逐
-元素一致（`max|diff|=0`）。dino DiT 预测的目标就是这个归一化、乘过 0.485 的
-clean latent，与 LF 的预测目标相同。dino path 和 LF 一样经过 bottleneck
-（`BottleneckPatchEmbed`，patch=1 的两层 1×1 卷积）。
+**不再乘 0.485**（原 LF 的 match_pixel_norm 已去掉）。统计读自项目
+`stat/` 目录（`dinov2b_*` 的 `mean=None` → 不减均值，`dinov3b_*` 有 mean）。
+dino DiT 预测的目标就是这个归一化后的 clean latent。dino path 和 LF 一样经过
+bottleneck（`BottleneckPatchEmbed`，patch=1 的两层 1×1 卷积）。
 
 ### 训练时 JiT 见到的 grounding（LF cascaded_noised）
 
@@ -78,7 +81,9 @@ instance-level，不读验证集、不需要参考图。
 ImageNet:     /data0/datasets/imagenet
 FID stats:    /data0/zhangruobei/Work/Pixel_Diffusion/fid_stats
 DINOv2-reg-B: facebook/dinov2-with-registers-base（HF 本地缓存，HF_HUB_OFFLINE=1）
-RAE 统计:     latent_force/dinov2_wreg_base_imagenet1k_stat.pt（随仓库提供）
+DINOv3-B/16:  /data0/pretrain_models/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth
+              + 本地 dinov3 源码（DINOV3_REPO）
+latent 统计:  stat/dinov2b_rae_imagenet1k_stat.pt、stat/dinov3b_rae_imagenet1k_stats.pt
 ```
 
 没有兼容的预训练 checkpoint，join-dino 从头训练。
@@ -86,19 +91,31 @@ RAE 统计:     latent_force/dinov2_wreg_base_imagenet1k_stat.pt（随仓库提�
 ## 8-GPU 实验
 
 训练默认 JiT-B/16、256px、8 卡、每卡 batch 128（全局 1024）、600 epoch，
-绝对学习率 `blr × global_batch / 256`，`blr=5e-5` → `2e-4`。
+绝对学习率 `blr × global_batch / 256`，`blr=5e-5` → `2e-4`。**dinov2b** 和
+**dinov3b** 各一套独立脚本,文件名区分编码器:
 
 ```bash
-bash sh/train_jit_b16_join_dino_8gpu_local.sh --dry-run
-bash sh/train_jit_b16_join_dino_8gpu_local.sh
+# DINOv2-reg-B/14 编码器
+bash sh/train_jit_b16_join_dinov2_8gpu_local.sh --dry-run
+bash sh/train_jit_b16_join_dinov2_8gpu_local.sh
+
+# DINOv3-B/16 编码器
+bash sh/train_jit_b16_join_dinov3_8gpu_local.sh --dry-run
+bash sh/train_jit_b16_join_dinov3_8gpu_local.sh
 ```
 
 采样前在脚本顶部（或用环境变量）设置 `CHECKPOINT`、`CKPT_CFG`、`DINO_CFG`、
 `DINO_STEPS`：
 
 ```bash
-bash sh/sample_jit_b16_join_dino_8gpu_local.sh --dry-run
-bash sh/sample_jit_b16_join_dino_8gpu_local.sh
+# DINOv2-reg-B/14 编码器
+bash sh/sample_jit_b16_join_dinov2_8gpu_local.sh --dry-run
+bash sh/sample_jit_b16_join_dinov2_8gpu_local.sh
+
+# DINOv3-B/16 编码器
+bash sh/sample_jit_b16_join_dinov3_8gpu_local.sh --dry-run
+bash sh/sample_jit_b16_join_dinov3_8gpu_local.sh
 ```
 
-`--dry-run` 只打印最终命令。GPU 卡号、数据路径、dino path 配置都在脚本顶部修改。
+`--dry-run` 只打印最终命令。GPU 卡号、数据路径、DINOv3 权重路径等配置都在
+脚本顶部修改。

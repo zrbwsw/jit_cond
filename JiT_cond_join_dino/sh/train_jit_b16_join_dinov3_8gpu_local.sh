@@ -1,33 +1,31 @@
 #!/usr/bin/env bash
-# JiT-B/16 + 独立 dino DiT 联合训练（join-dino）：本机 8 张 GPU。
-# JiT 的 grounding 由 dino DiT 生成的 DINOv2 latent 提供，c = t + y + t_dino + W_g·grounding。
-# 两个网络参数独立（约 264M 可训练），冻结 DINOv2 只做训练目标编码。
-# 用法：bash sh/train_jit_b16_join_dino_8gpu_local.sh [--dry-run]
+# JiT-B/16 + dino DiT 联合训练，grounding 编码器 = DINOv3-B/16。本机 8 卡。
+# 用法：bash sh/train_jit_b16_join_dinov3_8gpu_local.sh [--dry-run]
 set -euo pipefail
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 if [[ $# -gt 1 || ( $# -eq 1 && "${1:-}" != --dry-run ) ]]; then
-    echo '用法：bash sh/train_jit_b16_join_dino_8gpu_local.sh [--dry-run]' >&2
+    echo '用法：bash sh/train_jit_b16_join_dinov3_8gpu_local.sh [--dry-run]' >&2
     exit 2
 fi
 
-# ========================== 本机配置 ==========================
 GPUS=8
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-EXPERIMENT=JiT-B16-JoinDino-DINOv2regB-B600
+EXPERIMENT=JiT-B16-JoinDino-dinov3b-B600
 OUTPUT_DIR="$PROJECT_ROOT/checkpoints/$EXPERIMENT"
 IMAGENET_PATH=/data0/datasets/imagenet
 export IMAGENET_ROOT="$IMAGENET_PATH"
 export PRETRAIN_MODELS_ROOT=/data0/pretrain_models
 export FID_STATS_ROOT=/data0/zhangruobei/Work/Pixel_Diffusion/fid_stats
-# DINOv2-reg-B 从 HF 本地缓存加载（已缓存，不联网）。
-export HF_HUB_OFFLINE=1
+# DINOv3-B/16 从本地源码与权重加载（SHA 73cec8be），不联网。
+DINOV3_REPO=/data0/zhangruobei/Work/Pixel_Diffusion/Ours_BaseT_rmsnorm2_Residual_1016_normft_1028/SSL_code/dinov3
+DINOV3_WEIGHTS="$PRETRAIN_MODELS_ROOT/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth"
+export DINOV3_REPO
 PYTHON_BIN="${PYTHON_BIN:-/data0/zhangruobei/anaconda3/envs/irepa/bin/python}"
-RDZV_PORT="${RDZV_PORT:-29551}"
-# ==============================================================
+RDZV_PORT="${RDZV_PORT:-29553}"
 
 source "$PROJECT_ROOT/sh/portable_env.sh"
 
-# JiT path 沿用 JiT_cond 的超参（P_mean/std=-0.8/0.8）；dino path 的 t 调度 follow LF
+# JiT path 沿用 JiT_cond（P_mean/std=-0.8/0.8）；dino path 的 t_dino follow LF
 # （D_mean/std=-1.2/1.0），dino_weight=0.333、cascaded_noised β=0.25。
 CMD=("$PYTHON_BIN" -m torch.distributed.run
     --rdzv-backend=c10d --rdzv-endpoint="127.0.0.1:$RDZV_PORT" --nnodes=1 --nproc_per_node="$GPUS"
@@ -43,22 +41,21 @@ CMD=("$PYTHON_BIN" -m torch.distributed.run
     --output_dir "$OUTPUT_DIR" --resume "$OUTPUT_DIR"
     --data_path "$IMAGENET_PATH" --online_eval
     --use_grounding --grounding_dim 768
-    --dino_model DinoDiT-B --dinov2_path facebook/dinov2-with-registers-base
+    --dino_model DinoDiT-B --dino_encoder dinov3b
+    --dinov3_weights "$DINOV3_WEIGHTS" --dinov3_repo "$DINOV3_REPO"
     --D_mean -1.2 --D_std 1.0 --dino_weight 0.333 --dino_noise_beta 0.25
     --dino_steps 25 --dino_sampling_method heun
     --dino_cfg "${DINO_CFG:-1.0}" --dino_interval_min 0.0 --dino_interval_max 1.0)
 
 if [[ "${1:-}" == --dry-run ]]; then
-    printf '%q ' "${CMD[@]}"; printf '\n'
-    exit 0
+    printf '%q ' "${CMD[@]}"; printf '\n'; exit 0
 fi
 
 "$PYTHON_BIN" -c 'import torch; assert torch.cuda.is_available() and torch.cuda.device_count() >= 8, "本机训练需要 8 张可见 CUDA GPU"'
-"$PYTHON_BIN" -c 'from transformers import Dinov2WithRegistersModel; Dinov2WithRegistersModel.from_pretrained("facebook/dinov2-with-registers-base", local_files_only=True)' \
-    || { echo "缺少本地 DINOv2-reg-B 缓存，请先下载 facebook/dinov2-with-registers-base" >&2; exit 1; }
+[[ -f "$DINOV3_REPO/hubconf.py" && -f "$DINOV3_WEIGHTS" ]] || { echo "缺少本地 DINOv3 源码或权重" >&2; exit 1; }
 for path in "$IMAGENET_ROOT/train" "$IMAGENET_ROOT/val" \
     "$FID_STATS_ROOT/jit_in256_stats.npz" "$FID_STATS_ROOT/weights-inception-2015-12-05-6726825d.pth" \
-    "$PROJECT_ROOT/latent_force/dinov2_wreg_base_imagenet1k_stat.pt"; do
+    "$PROJECT_ROOT/stat/dinov3b_rae_imagenet1k_stats.pt"; do
     [[ -e "$path" ]] || { echo "训练资源不存在：$path" >&2; exit 1; }
 done
 mkdir -p "$OUTPUT_DIR"

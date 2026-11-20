@@ -38,10 +38,15 @@ def get_args_parser():
     # dino path（独立 DiT 去噪 DINOv2 latent，结构/编码与 Latent Forcing 对齐）
     parser.add_argument('--dino_model', default='DinoDiT-B', type=str,
                         help='dino DiT 规模；DinoDiT-B 与 JiT-B 同尺寸（12 层/768/12 头）')
-    parser.add_argument('--dinov2_path', default='facebook/dinov2-with-registers-base', type=str,
-                        help='DINOv2 encoder 的本地/HF 名称；需已缓存，不联网')
+    parser.add_argument('--dino_encoder', default='dinov2b', choices=['dinov2b', 'dinov3b'], type=str,
+                        help='冻结的 latent 编码器 / dino DiT 目标空间：dinov2b = DINOv2-reg-B/14，'
+                             'dinov3b = DINOv3-B/16；两者最后 norm 均去 affine，归一化不乘 0.485')
+    parser.add_argument('--dinov3_weights', default='', type=str,
+                        help='dinov3b 时的本地 DINOv3 权重路径；留空按 PRETRAIN_MODELS_ROOT 解析')
+    parser.add_argument('--dinov3_repo', default='', type=str,
+                        help='dinov3b 时的本地 DINOv3 源码目录（含 hubconf.py）；留空按 DINOV3_REPO 解析')
     parser.add_argument('--dino_stat_path', default='', type=str,
-                        help='RAE latent 统计文件；留空用 latent_force/ 随附的 ImageNet-1k 统计')
+                        help='latent 统计文件；留空按 --dino_encoder 用 stat/ 下对应文件')
     parser.add_argument('--D_mean', default=-1.2, type=float, help='dino path t 采样的 logit-normal 均值（LF 默认）')
     parser.add_argument('--D_std', default=1.0, type=float, help='dino path t 采样的 logit-normal 标准差（LF 默认）')
     parser.add_argument('--dino_weight', default=0.333, type=float, help='dino loss 的权重（LF 默认）')
