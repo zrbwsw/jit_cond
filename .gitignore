@@ -47,3 +47,5 @@ backups/
 # 采样图目录：只保留评测日志，不进入版本库（也避免 git 扫描 5 万张 PNG）
 **/checkpoints/**/heun-steps*/
 !fid_floor/run.log
+# join-dino 依赖的 RAE latent 统计（代码资源，非训练产物）
+!JiT_cond_join_dino/latent_force/*.pt
