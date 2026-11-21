@@ -26,7 +26,7 @@ export PYTHONPATH="$PROJECT_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 export PRETRAIN_MODELS_ROOT="${PRETRAIN_MODELS_ROOT:-$REPOSITORY_ROOT/pretrain_models}"
 export FID_STATS_ROOT="${FID_STATS_ROOT:-$REPOSITORY_ROOT/fid_stats}"
 export IMAGENET_ROOT="${IMAGENET_ROOT:-/mnt/shared-storage-user/datafactory-share/gushishen/imagenet}"
-export DINOV3_REPO="${DINOV3_REPO:-$REPOSITORY_ROOT/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3}"
+export DINOV3_REPO="${DINOV3_REPO:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3}"
 export DINO_MODEL_NAME="${DINO_MODEL_NAME:-dinov3_vitb16}"
 export DINO_WEIGHTS_PATH="${DINO_WEIGHTS_PATH:-$PRETRAIN_MODELS_ROOT/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth}"
 

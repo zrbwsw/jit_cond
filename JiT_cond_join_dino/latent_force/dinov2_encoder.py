@@ -25,12 +25,16 @@ import torch.nn.functional as F
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 STAT_DIR = os.path.normpath(os.path.join(_HERE, os.pardir, "stat"))
+PRETRAIN_DIR = os.environ.get(
+    "PRETRAIN_MODELS_ROOT",
+    os.path.normpath(os.path.join(_HERE, os.pardir, os.pardir, "pretrain_models")),
+)
 
 # 每种编码器的默认配置：权重名、输入分辨率、统计文件。归一化统一不乘额外系数。
 ENCODER_PRESETS = {
     "dinov2b": {
         "kind": "dinov2",
-        "weights": "facebook/dinov2-with-registers-base",
+        "weights": os.path.join(PRETRAIN_DIR, "dinov2-with-registers-base"),
         "input_size": 224,
         "stat": "dinov2b_rae_imagenet1k_stat.pt",
     },

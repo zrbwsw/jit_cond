@@ -16,16 +16,16 @@ fi
 GPUS=8
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 # patch-level AdaLN 的训练权重（grounding_proj 学的是 DINOv3 patch token 空间）
-CHECKPOINT=/data0/zhangruobei/Work/jit_cond_ablation/JiT_cond/checkpoints/JiT-B16-DINOv3B-PatchAdaLN-ValGrounding-B600/checkpoint-101.pth
-IMAGENET_PATH=/data0/datasets/imagenet
+CHECKPOINT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/JiT_cond/checkpoints/JiT-B16-DINOv3B-PatchAdaLN-ValGrounding-B600/checkpoint-100.pth
+IMAGENET_PATH=/mnt/shared-storage-user/datafactory-share/gushishen/imagenet
 export IMAGENET_ROOT="$IMAGENET_PATH"
-export PRETRAIN_MODELS_ROOT=/data0/pretrain_models
-export FID_STATS_ROOT=/data0/zhangruobei/Work/Pixel_Diffusion/fid_stats
-DINO_REPO=/data0/zhangruobei/Work/Pixel_Diffusion/Ours_BaseT_rmsnorm2_Residual_1016_normft_1028/SSL_code/dinov3
+export PRETRAIN_MODELS_ROOT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/pretrain_models
+export FID_STATS_ROOT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/fid_stats
+DINO_REPO=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3
 DINO_WEIGHTS="$PRETRAIN_MODELS_ROOT/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth"
 
 # Latent Forcing：只用前 25 步推进 latent（50 步级联调度的前半段）。
-LF_CKPT=/data0/zhangruobei/Work/LatentForcing/lfjit-l-200.pth
+LF_CKPT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/LatentForcing/lfjit-l-200.pth
 LF_EMA=1                  # README 默认使用 model_ema1
 LF_STEPS=25
 LF_METHOD=heun            # 25 步 = 50 次网络评估

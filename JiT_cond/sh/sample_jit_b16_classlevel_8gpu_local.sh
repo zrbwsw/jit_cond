@@ -15,11 +15,11 @@ GPUS=8
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 CHECKPOINT="${CHECKPOINT:-$PROJECT_ROOT/checkpoints/JiT-B16-DINOv3B-PatchAdaLN-ValGrounding-B600/checkpoint-101.pth}"
 CLASS_REF_SEED="${CLASS_REF_SEED:-0}"
-IMAGENET_PATH=/data0/datasets/imagenet
+IMAGENET_PATH=/mnt/shared-storage-user/datafactory-share/gushishen/imagenet
 export IMAGENET_ROOT="$IMAGENET_PATH"
-export PRETRAIN_MODELS_ROOT=/data0/pretrain_models
-export FID_STATS_ROOT=/data0/zhangruobei/Work/Pixel_Diffusion/fid_stats
-DINO_REPO=/data0/zhangruobei/Work/Pixel_Diffusion/Ours_BaseT_rmsnorm2_Residual_1016_normft_1028/SSL_code/dinov3
+export PRETRAIN_MODELS_ROOT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/pretrain_models
+export FID_STATS_ROOT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/fid_stats
+DINO_REPO=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3
 DINO_WEIGHTS="$PRETRAIN_MODELS_ROOT/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth"
 RDZV_PORT="${RDZV_PORT:-29541}"
 # ==============================================================

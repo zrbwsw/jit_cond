@@ -14,7 +14,7 @@ OUTPUT_DIR="$PROJECT_ROOT/checkpoints/$EXPERIMENT"
 IMAGENET_PATH=/mnt/shared-storage-user/datafactory-share/gushishen/imagenet
 PRETRAIN_MODELS_ROOT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/pretrain_models
 FID_STATS_ROOT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/fid_stats
-DINO_REPO="$PROJECT_ROOT/../Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3"
+DINO_REPO="/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3"
 DINO_WEIGHTS="$PRETRAIN_MODELS_ROOT/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth"
 # ==============================================================
 

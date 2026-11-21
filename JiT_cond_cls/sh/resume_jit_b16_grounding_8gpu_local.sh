@@ -16,15 +16,15 @@ OUTPUT_DIR="$PROJECT_ROOT/checkpoints/$EXPERIMENT"
 # 下载文件实际名为 checkpoint-last.pth；续训时会定期更新同名文件。
 # 后续重启自动接着最新进度；CHECKPOINT=/absolute/path/to/checkpoint 可显式指定文件。
 RESUME_CHECKPOINT="${CHECKPOINT:-$OUTPUT_DIR/checkpoint-last.pth}"
-IMAGENET_PATH=/data0/datasets/imagenet
+IMAGENET_PATH=/mnt/shared-storage-user/datafactory-share/gushishen/imagenet
 export IMAGENET_ROOT="$IMAGENET_PATH"
-export PRETRAIN_MODELS_ROOT=/data0/pretrain_models
-export FID_STATS_ROOT=/data0/zhangruobei/Work/Pixel_Diffusion/fid_stats
-DINO_REPO=/data0/zhangruobei/Work/Pixel_Diffusion/Ours_BaseT_rmsnorm2_Residual_1016_normft_1028/SSL_code/dinov3
+export PRETRAIN_MODELS_ROOT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/pretrain_models
+export FID_STATS_ROOT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/fid_stats
+DINO_REPO=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3
 DINO_WEIGHTS="$PRETRAIN_MODELS_ROOT/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth"
 export DINOV3_REPO="$DINO_REPO"
 export DINO_WEIGHTS_PATH="$DINO_WEIGHTS"
-PYTHON_BIN="${PYTHON_BIN:-/data0/zhangruobei/anaconda3/envs/irepa/bin/python}"
+PYTHON_BIN="${PYTHON_BIN:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/envs/irepa-py310-cu126-20261015/bin/python}"
 # ==============================================================
 
 # 复用环境变量和路径解析，随后直接在本机启动 torchrun。

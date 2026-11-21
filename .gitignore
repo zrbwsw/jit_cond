@@ -7,7 +7,7 @@ __pycache__/
 .venv/
 venv/
 
-# Training outputs, model weights, and logs
+# Training outputs, model weights, statistics, and logs
 checkpoints/
 outputs/
 logs/
@@ -16,6 +16,8 @@ wandb/
 *.pth
 *.ckpt
 *.safetensors
+*.npz
+*.npy
 *.log
 
 # Local credentials and editor configuration
@@ -34,18 +36,16 @@ credentials*.json
 # Local pre-edit file backups
 backups/
 
-# Experiment logs are tracked; weights, generated images and caches stay ignored.
-# checkpoints/ is re-included only for its text logs, TensorBoard events and
-# diagnostic summaries.
+# Keep training logs in their experiment directories; exclude sampling and events.
 !checkpoints/
 **/checkpoints/**
 !**/checkpoints/**/
-!**/checkpoints/**/*.log
-!**/checkpoints/**/events.out.tfevents.*
-!**/checkpoints/**/diagnose.json
+!**/checkpoints/**/train*.log
+!**/checkpoints/**/launcher.log
+!**/checkpoints/**/pipeline.log
+!**/checkpoints/**/*resume*.log
+!**/checkpoints/**/*watch_stop*.log
 **/checkpoints/.cache/
-# 采样图目录：只保留评测日志，不进入版本库（也避免 git 扫描 5 万张 PNG）
+**/checkpoints/**/eval_*/
 **/checkpoints/**/heun-steps*/
 !fid_floor/run.log
-# join-dino 依赖的 RAE latent 统计（代码资源，非训练产物）
-!JiT_cond_join_dino/latent_force/*.pt

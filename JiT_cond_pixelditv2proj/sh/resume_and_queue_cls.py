@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 B80_ROOT = Path(__file__).resolve().parents[1]
-CLS_ROOT = B80_ROOT.parent / "jit_cond_cls"
+CLS_ROOT = B80_ROOT.parent / "JiT_cond_cls"
 B80_SESSION = "JiT-B16-DINOv3B-Noisy-PixelDiT2Proj-B80"
 CLS_SESSION = "JiT-B16-DINOv3B-CLS-BlockAdaLN-ValGrounding-B600"
 B80_OUTPUT = B80_ROOT / "checkpoints" / B80_SESSION

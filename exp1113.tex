@@ -21,23 +21,25 @@
     \centering
     \small
     \setlength{\tabcolsep}{3pt}
-    \caption{Training loss and online generation metrics for JiT-B/16 with DINOv3-B grounding. Patch AdaLN uses validation-set clean-image patch tokens, CLS Block AdaLN uses the validation-set clean-image CLS token, and Noisy PixelDiT2 Proj uses the current noisy state with a time-conditioned projector. Epochs are reported as one-based training epoch counts (log index plus one).}
+    \caption{Training loss and generation metrics for JiT-B/16 with DINOv3-B grounding. Patch AdaLN uses validation-set clean-image patch tokens, CLS Block AdaLN uses the validation-set clean-image CLS token, and Noisy PixelDiT2 Proj uses the current noisy state with a time-conditioned projector. Epochs are reported as one-based training epoch counts (log index plus one).}
     \label{tab:jit_cond_training}
+    \resizebox{1.0\textwidth}{!}{%
     \begin{tabular}{c c c c c c}
         \toprule
         Method & Epoch & CFG;Interval & Train Loss & FID $\downarrow$ & IS $\uparrow$ \\
         \midrule
         \multirow{3}{*}{JiT}
-        & 80 & 2.9;[0.1,1] & & 8.64 & 214.0 \\
+        & 80 & 2.9;[0.1,1] & & \textbf{8.64} & 214.0 \\
         & 80 & 5.1;[0.1,1] & & 6.77 & 218.8 \\
         & 600 & 3.0;[0.1,1] & & 3.66 & 275.1 \\
         \hline
         \multicolumn{6}{@{}l}{\textit{c = t + y + clean-image dino patch tokens}} \\
-        \multirow{4}{*}{Patch-level AdaLN}
+        \multirow{5}{*}{Patch-level AdaLN}
         & 21 & 2.9;[0.1,1] & 0.0474 & 21.29 & 110.2 \\
         & 41 & 2.9;[0.1,1] & 0.0449 & 4.82  & 192.9 \\
         & 61 & 2.9;[0.1,1] & 0.0441 & 3.78  & 203.1 \\
-        & 81 & 2.9;[0.1,1] & 0.0437 & 3.67  & 204.5 \\
+        \rowcolor[gray]{0.9}
+        & 81 & 2.9;[0.1,1] & 0.0437 & \textbf{3.67}  & 204.5 \\
         & 101 & 2.9;[0.1,1] & 0.0433 & 3.58  & 206.0 \\
         % & 121 & 2.9;[0.1,1] & 0.0431 & 3.56  & 206.8 \\
         % & 141 & 2.9;[0.1,1] & 0.0429 & 3.51  & 207.4 \\
@@ -45,6 +47,9 @@
         % & 181 & 2.9;[0.1,1] & 0.0425 & 3.50  & 207.4 \\
         % & 201 & 2.9;[0.1,1] & 0.0425 & 3.50  & 207.4 \\
         % & 221 & 2.9;[0.1,1] & 0.0424 & 3.51  & 207.2 \\
+        \hline
+        \multicolumn{6}{@{}l}{\textit{Class-level grounding (seed 0), one val image per class shared by 50 samples}} \\
+        Patch-level AdaLN & 101 & 2.9;[0.1,1] & 0.0433 & 28.26 & 198.67 \\
         \hline
         \multicolumn{6}{@{}l}{\textit{c = t + y + clean-image dino cls token}} \\
         \multirow{3}{*}{Block-level AdaLN}
@@ -59,8 +64,172 @@
         & 60 & 2.9;[0.1,1] & 0.0660 & 22.96  & 68.2 \\
         & 80 & 2.9;[0.1,1] & 0.0656 & 14.31  & 100.8 \\
         \bottomrule
-    \end{tabular}
+    \end{tabular}%
+    }
 \end{table}
 
+\begin{table}[t]
+    \centering
+    \small
+    \setlength{\tabcolsep}{3pt}
+    \caption{JoinDino results with JiT-B/16 and DinoDiT-B using frozen DINOv3-B/16 grounding. --bsz 1024, --lr 2e-4, --warmup 5, and $\mathcal{L}=\mathcal{L}_{\mathrm{JiT}}+0.333\mathcal{L}_{\mathrm{DINO}}$. Clean-image DINO grounding is noised with $t_{\mathrm{cond}}\sim U[0.75,1)$ during training and replaced by DinoDiT-generated latents during inference. Pixel and DINO latent sampling use Heun with 50 and 25 steps, respectively.}
+    \label{tab:join_dino_dinov3b_results}
+    \resizebox{1.0\textwidth}{!}{%
+    \begin{tabular}{c c c c c c c c}
+        \toprule
+        Method & Epoch & DINO & JiT & loss\_jit & loss\_dino & FID $\downarrow$ & IS $\uparrow$ \\
+        \midrule
+        \multicolumn{8}{@{}l}{\textit{c = $t + y + t_{\mathrm{dino}} + W_g z_{\mathrm{cond}}$ (DINOv3-B/16 patch tokens)}} \\
+        \multirow{20}{*}{JiT\_cond\_join\_dinov3b}
+        & 20 & 1.0;[0,1] & 2.9;[0.1,1] & 0.0494 & 0.4724 & 118.77 & 10.3 \\
+        & & 1.5;[0,1] & 2.9;[0.1,1] & & & 119.00 & 10.4 \\
+        & & 2.0;[0,1] & 2.9;[0.1,1] & & & 121.91 & 10.2 \\
+        & & 2.5;[0,1] & 2.9;[0.1,1] & & & 124.70 & 9.9 \\
+        \hdashline
+        & 40 & 1.0;[0,1] & 2.9;[0.1,1] & 0.0471 & 0.4273 & 17.90 & 74.0 \\
+        & & 1.5;[0,1] & 2.9;[0.1,1] & & & 8.54 & 154.9 \\
+        & & 2.0;[0,1] & 2.9;[0.1,1] & & & 7.10 & 217.1 \\
+        & & 2.5;[0,1] & 2.9;[0.1,1] & & & 7.58 & 254.7 \\
+        \hdashline
+        & 60 & 1.0;[0,1] & 2.9;[0.1,1] & 0.0462 & 0.4061 & 16.05 & 82.2 \\
+        & & 1.5;[0,1] & 2.9;[0.1,1] & & & 6.66 & 174.2 \\
+        & & 2.0;[0,1] & 2.9;[0.1,1] & & & 5.62 & 245.8 \\
+        & & 2.5;[0,1] & 2.9;[0.1,1] & & & 6.50 & 289.0 \\
+        \hdashline
+        & 80 & 1.0;[0,1] & 2.9;[0.1,1] & 0.0456 & 0.3946 & 16.59 & 82.3 \\
+        & & 1.5;[0,1] & 2.9;[0.1,1] & & & 6.58 & 177.5 \\
+        \rowcolor[gray]{0.9}
+        & & 2.0;[0,1] & 2.9;[0.1,1] & & & \textbf{5.35} & 252.5 \\
+        & & 2.5;[0,1] & 2.9;[0.1,1] & & & 6.14 & 298.4 \\
+        \hdashline
+        & 100 & 1.0;[0,1] & 2.9;[0.1,1] & 0.0455 & 0.3845 & 16.58 & 83.4 \\
+        & & 1.5;[0,1] & 2.9;[0.1,1] & & & 6.49 & 182.1 \\
+        & & 2.0;[0,1] & 2.9;[0.1,1] & & & 5.37 & 259.3 \\
+        & & 2.5;[0,1] & 2.9;[0.1,1] & & & 6.23 & 305.7 \\
+        % & 120 & 1.0;[0,1] & 2.9;[0.1,1] & 0.0452 & 0.3793 & 15.80 & 87.2 \\
+        % \hdashline
+        % & 140 & 1.0;[0,1] & 2.9;[0.1,1] & 0.0449 & 0.3720 & 15.53 & 88.5 \\
+        % \hdashline
+        \bottomrule
+    \end{tabular}%
+    }
+\end{table}
+
+\begin{table}[t]
+    \centering
+    \resizebox{1.0\textwidth}{!}{
+        \begin{tabular}{l c c c c c c c c}
+            \toprule
+            \textbf{Model} & \textbf{Params} & \textbf{Patch-Depth} & \textbf{Pixel-Depth} & \textbf{Epoch} & \textbf{CFG; Interval} & \textbf{FID}$_{50k}\downarrow$ & \textbf{IS}$\uparrow$ & \textbf{FDR6}$\downarrow$ \\
+            
+            \midrule
+            JiT-B/16 & 131M & 12 & 0 & 80 & 5.1; $[0.1,1]$ & \textcolor{green}{\textbf{6.77}} & \textcolor{green}{\textbf{218.8}} & \textcolor{green}{\textbf{23.10}} \\
+            JiT-B/16 & 131M & 12 & 0 & 600 & 3.0; $[0.1,1]$ & \textcolor{green}{\textbf{3.66}} & \textcolor{green}{\textbf{275.1}} & \textcolor{green}{\textbf{15.82}} \\
+
+            \hdashline
+            9-2-JiT-B/16 & 131M & 12 & 0 & 80 & 4.2; $[0.1,1]$ & \textcolor{red}{\textbf{4.99}} & \textcolor{red}{\textbf{261.1}} & \textcolor{red}{\textbf{19.55}} \\  
+
+            \hline
+            \multirow{2}{*}{JiT-L/16} & \multirow{2}{*}{459M} & \multirow{2}{*}{24} & \multirow{2}{*}{0} & 200 & 1.0; & 16.21 & -- & -- \\
+            & & & & 200 & 2.9; & 2.79 & -- & -- \\
+
+            \hline
+            \multirow{2}{*}{LF-DiT-L/16} & \multirow{2}{*}{465M} & \multirow{2}{*}{24} & \multirow{2}{*}{0} & 200 & 1.0; & 7.20 & -- & -- \\
+            & & & & 200 & 1.5; & 2.48 & -- & -- \\
+
+            \hline
+            \multirow{2}{*}{PixelDiT-B/16} & \multirow{2}{*}{187M} & \multirow{2}{*}{12} & \multirow{2}{*}{2} & 20 & 3.25; $[0.1,1]$ & 25.69 & 80.4 & -- \\
+            & & & & 40 & 3.25; $[0.1,1]$ & 14.76 & 128.5 & -- \\
+            & & & & 60 & 3.25; $[0.1,1]$ & 10.24 & 158.7 & -- \\
+            & & & & 80 & 3.25; $[0.1,1]$ & 8.32 & 178.4 & 21.36 \\
+            & & & & 80 & 6.0; $[0.1,1]$ & \textcolor{green}{\textbf{4.44}} & 281.0 & 17.59 \\
+
+            \hline
+            \multirow{2}{*}{PixelDiT-L/16} & \multirow{2}{*}{573M} & \multirow{2}{*}{22} & \multirow{2}{*}{4} & 20 & 3.25; $[0.1,1]$ & 10.40 & 154.5 & -- \\
+            & & & & 40 & 3.25; $[0.1,1]$ & 3.55 & 234.3 & -- \\
+            & & & & 60 & 3.25; $[0.1,1]$ & 2.67 & 257.8 & -- \\
+            & & & & 80 & 3.25; $[0.1,1]$ & 2.60 & 266.4 & -- \\
+            \bottomrule
+        \end{tabular}
+    }
+    \caption{\textbf{-B and -L comparison on ImageNet $256\times256$.}}
+    \label{tab:comparison}
+\end{table}
+
+\begin{table}[!ht]
+    \centering
+    \caption{\textbf{Quantitative results on ImageNet $256\times256$ for class-conditioned generation.} Added proposed-method results are from the source papers; parameter counts follow each paper's convention.}
+    \label{tab:imagenet256_related_work}
+    \scriptsize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{1.08}
+    \resizebox{1.0\textwidth}{!}{%
+        \begin{tabular}{l c c c c c c c c}
+            \toprule
+            \multirow{2}{*}{\textbf{Method}} &
+            \multirow{2}{*}{\textbf{Epochs}} &
+            \multirow{2}{*}{\textbf{\#Params}} &
+            \multirow{2}{*}{\textbf{GFLOPs}} &
+            \multirow{2}{*}{\textbf{NFE}} &
+            \multicolumn{4}{c}{\textbf{Generation@256}} \\
+            \cmidrule(lr){6-9}
+            & & & & & \textbf{gFID}$\downarrow$ & \textbf{IS}$\uparrow$ & \textbf{Precision}$\uparrow$ & \textbf{Recall}$\uparrow$ \\
+            \midrule
+            \multicolumn{9}{c}{\textbf{\textcolor{blue}{Latent Generative Models}}} \\
+            \midrule
+            LDM-4-G & 170 & 400M & 208 & $250\times2$ & 3.60 & 247.6 & 0.87 & 0.48 \\
+            MaskDiT & 1600 & 675M & 238 & $79\times2$ & 2.28 & 276.5 & 0.80 & 0.61 \\
+            DiT-XL/2 & 1400 & 675M & 238 & $250\times2$ & 2.27 & 278.2 & 0.83 & 0.57 \\
+            SiT-XL/2 & 1400 & 675M & 238 & $250\times2$ & 2.06 & 270.3 & 0.82 & 0.59 \\
+            SVG-XL & 1400 & 675M & -- & 25 & 1.92 & 264.9 & -- & -- \\
+            MAR & 800 & 943M & -- & -- & 1.55 & 303.7 & 0.81 & 0.62 \\
+            REPA, SiT-XL/2 & 800 & 675M & 238 & 434 & 1.42 & 305.7 & 0.80 & 0.65 \\
+            FAE & 800 & 675M & -- & 250 & 1.41 & 274.1 & 0.81 & 0.63 \\
+            RAE, DiT$_{\mathrm{DH}}$-XL/2 & 800 & 839M & 292 & $50\times2$ & 1.13 & 262.6 & 0.78 & 0.67 \\
+            RAEv2, DiT$_{\mathrm{DH}}$-XL ($K{=}7$) & 80 & 839M & 292 & 50 & 1.06 & 255.3 & -- & -- \\
+            \midrule
+            \multicolumn{9}{c}{\textbf{\textcolor{green}{Pixel Generative Models}}} \\
+            \midrule
+            ADM & 400 & 554M & -- & 250 & 4.59 & 186.7 & 0.82 & 0.52 \\
+            CDM & 2160 & 1953M & -- & 4100 & 4.88 & 158.7 & -- & -- \\
+            RIN & 480 & 410M & 668 & 1000 & 3.42 & 182.0 & -- & -- \\
+            VDM++, UViT/2 & -- & 2B & 1110 & -- & 2.12 & 267.7 & -- & -- \\
+            JetFormer & 500 & 2.8B & -- & -- & 6.64 & -- & 0.69 & 0.56 \\
+            SiD, UViT/2 & 800 & 2.46B & 1110 & $250\times2$ & 2.44 & 256.3 & -- & -- \\
+            FractalMAR-H & 600 & 844M & -- & -- & 6.15 & 348.9 & 0.81 & 0.46 \\
+            FARMER & 320 & 1.9B & -- & -- & 3.60 & 269.2 & 0.81 & 0.51 \\
+            PixelFlow-XL/4 & 320 & 677M & 5818 & $120\times2$ & 1.98 & 282.1 & 0.81 & 0.60 \\
+            PixNerd-XL/16 & 320 & 700M & 268 & 50 & 1.93 & 298.0 & 0.80 & 0.60 \\
+            DiP-XL/16 & 320 & 631M & -- & $100\times2$ & 1.90 & 285.4 & 0.81 & 0.62 \\
+            EPG-XL/16 & 800 & 583M & 256 & 75 & 1.94 & 283.2 & 0.80 & 0.61 \\
+            JiT-H/16 & 600 & 953M & 364 & $100\times2$ & 1.86 & 303.4 & 0.78 & 0.62 \\
+            JiT-G/16 & 600 & 2B & 766 & $100\times2$ & 1.82 & 292.6 & 0.79 & 0.62 \\
+            PixelGen-XL/16 & 160 & 676M & -- & 50 & 1.83 & 293.6 & 0.79 & 0.63 \\
+            SiD2, UViT/2 & 1280 & -- & 274 & 512 & 1.72 & -- & -- & -- \\
+            DeCo-XL/16 & 600 & 682M & -- & $100\times2$ & 1.69 & 304.0 & 0.79 & 0.63 \\
+            PixelDiT-XL & 80 & 797M & 311 & $100\times2$ & 2.36 & 282.3 & 0.80 & 0.57 \\
+            PixelDiT-XL & 320 & 797M & 311 & $100\times2$ & 1.61 & 292.7 & 0.78 & 0.64 \\
+            \midrule
+            % Proposed methods reported in the requested pixel-diffusion papers.
+            DeCo-XL/16 + EG-FM & 440 & 682M & -- & $100\times2$ & 1.63 & 300.1 & 0.79 & 0.62 \\
+            HyperDiT-H + EG-FM & 220 & 952M & -- & $100\times2$ & 1.51 & 293.4 & 0.78 & 0.64 \\
+            PixelDiT-XL + EG-FM & 80 & 797M & -- & $100\times2$ & 1.99 & 280.8 & 0.81 & 0.61 \\
+            PixelDiT-XL + EG-FM & 200 & 797M & -- & $100\times2$ & 1.55 & 296.2 & 0.79 & 0.65 \\
+            PixelDiT-XL + EG-FM & 600 & 797M & -- & $100\times2$ & 1.45 & 299.6 & 0.78 & 0.65 \\
+            HyperDiT-XL & 600 & 676M & -- & $100\times2$ & 1.63 & 304.2 & 0.80 & 0.62 \\
+            HyperDiT-H & 600 & 952M & -- & $100\times2$ & 1.56 & 306.5 & 0.80 & 0.64 \\
+            Observation Operator Diffusion & 80 & 798M & -- & -- & 1.95 & 283.2 & 0.78 & 0.62 \\
+            Observation Operator Diffusion & 260 & 798M & -- & -- & 1.52 & 300.0 & 0.78 & 0.64 \\
+            PixSGR-H/16 & 200 & 875M & -- & $100\times2$ & 1.62 & 308.8 & 0.78 & 0.63 \\
+            PixSGR-H/16 & 320 & 875M & -- & $100\times2$ & 1.51 & 311.0 & 0.78 & 0.65 \\
+            PixelDiT2-H & 480 & 1008M & -- & -- & 1.52 & 297.8 & -- & -- \\
+            PixelDiT2-H & 600 & 1008M & -- & -- & 1.46 & 301.6 & -- & -- \\
+            PixelDiT2-H$^{*}$ & 480 & 1008M & -- & -- & 1.48 & 299.1 & -- & -- \\
+            \bottomrule
+        \end{tabular}%
+    }
+    \par\smallskip\raggedright\scriptsize
+    New rows: Table 1 of Energy-Guided FM, HyperDiT, Observation Operator Diffusion, and PixSGR; Table 2 of PixelDiT2 (its Table 1 is conceptual). $^{*}$ denotes delayed grounding dropout. -- denotes an unreported value; PixelDiT2 reports 50 Heun steps, not NFE.
+\end{table}
 
 \end{document}

@@ -16,9 +16,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 REPOSITORY_ROOT = PROJECT_ROOT.parent
 DEFAULT_IMAGENET_ROOT = Path("/mnt/shared-storage-user/datafactory-share/gushishen/imagenet")
 DINOV3_REPO_CANDIDATES = (
-    REPOSITORY_ROOT / "5-3-Residual(0,1)-1017(DINOv3-B16)" / "SSL_code" / "dinov3",
-    REPOSITORY_ROOT / "Ours_BaseT_rmsnorm2_Residual_1016_normft_1028" / "SSL_code" / "dinov3",
-    REPOSITORY_ROOT / "Our_rmsnorm2_4DiT_Residual_ft_1024" / "SSL_code" / "dinov3",
+    Path("/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3"),
 )
 DINOV3_B16_WEIGHTS = "dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth"
 

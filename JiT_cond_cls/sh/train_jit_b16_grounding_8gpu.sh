@@ -9,12 +9,13 @@ SCRIPT_PATH="$(realpath -- "${BASH_SOURCE[0]}")"
 GPU_HOST=agent-gpu-l2-2
 GPUS=8
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+EPOCHS="${EPOCHS:-600}"
 EXPERIMENT=JiT-B16-DINOv3B-CLS-BlockAdaLN-ValGrounding-B600
 OUTPUT_DIR="$PROJECT_ROOT/checkpoints/$EXPERIMENT"
 IMAGENET_PATH=/mnt/shared-storage-user/datafactory-share/gushishen/imagenet
 PRETRAIN_MODELS_ROOT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/pretrain_models
 FID_STATS_ROOT=/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/fid_stats
-DINO_REPO="$PROJECT_ROOT/../Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3"
+DINO_REPO="/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3"
 DINO_WEIGHTS="$PRETRAIN_MODELS_ROOT/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth"
 # ==============================================================
 
@@ -32,7 +33,7 @@ CMD=("$PYTHON_BIN" -m torch.distributed.run --standalone --nproc_per_node="$GPUS
     --P_mean -0.8 --P_std 0.8 \
     --img_size 256 --noise_scale 1.0 \
     --batch_size 128 --blr 5e-5 \
-    --epochs 600 --warmup_epochs 5 \
+    --epochs "$EPOCHS" --warmup_epochs 5 \
     --gen_bsz 256 --num_images 50000 --cfg 2.9 --interval_min 0.1 --interval_max 1.0 \
     --sampling_method heun --num_sampling_steps 50 \
     --eval_freq 20 --save_last_freq 5 --save_interval 20 \

@@ -10,12 +10,12 @@ fi
 
 # ========================== 本机配置 ==========================
 # 环境变量可以覆盖以下默认路径；直接使用本机 GPU 启动分布式训练。
-export PYTHON_BIN="${PYTHON_BIN:-/data0/zhangruobei/anaconda3/envs/irepa/bin/python}"
+export PYTHON_BIN="${PYTHON_BIN:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/envs/irepa-py310-cu126-20261015/bin/python}"
 export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2,3,4,5,6,7}"
-export IMAGENET_PATH="${IMAGENET_PATH:-${IMAGENET_ROOT:-/data0/datasets/imagenet}}"
-export PRETRAIN_MODELS_ROOT="${PRETRAIN_MODELS_ROOT:-/data0/pretrain_models}"
-export FID_STATS_ROOT="${FID_STATS_ROOT:-/data0/zhangruobei/Work/Pixel_Diffusion/fid_stats}"
-export DINO_REPO="${DINO_REPO:-${DINOV3_REPO:-/data0/zhangruobei/Work/Pixel_Diffusion/Ours_BaseT_rmsnorm2_Residual_1016_normft_1028/SSL_code/dinov3}}"
+export IMAGENET_PATH="${IMAGENET_PATH:-${IMAGENET_ROOT:-/mnt/shared-storage-user/datafactory-share/gushishen/imagenet}}"
+export PRETRAIN_MODELS_ROOT="${PRETRAIN_MODELS_ROOT:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/pretrain_models}"
+export FID_STATS_ROOT="${FID_STATS_ROOT:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/fid_stats}"
+export DINO_REPO="${DINO_REPO:-${DINOV3_REPO:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3}}"
 export DINO_WEIGHTS="${DINO_WEIGHTS:-${DINO_WEIGHTS_PATH:-$PRETRAIN_MODELS_ROOT/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth}}"
 EXPERIMENT="${EXPERIMENT:-JiT-B16-DINOv3B-Noisy-PixelDiT2Proj-B80}"
 OUTPUT_DIR="${OUTPUT_DIR:-$PROJECT_ROOT/checkpoints/$EXPERIMENT}"

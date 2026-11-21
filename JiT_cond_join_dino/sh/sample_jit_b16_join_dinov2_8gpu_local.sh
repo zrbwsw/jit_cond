@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 # JiT-B/16 + dino DiT 联合采样，grounding 编码器 = DINOv2-reg-B/14。本机 8 卡。
-# 每样本先用 dino DiT 采 DINO_STEPS 步得到 latent grounding（instance-level），
-# 再跑 50 步 JiT。编码器须与训练一致。
 # 用法：CHECKPOINT=/abs/ckpt.pth bash sh/sample_jit_b16_join_dinov2_8gpu_local.sh [--dry-run]
 set -euo pipefail
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -12,23 +10,23 @@ fi
 
 GPUS=8
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-EXPERIMENT=JiT-B16-JoinDino-dinov2b-B600
+EXPERIMENT="${EXPERIMENT:-JiT-B16-JoinDino-dinov2b-B200}"
 CHECKPOINT="${CHECKPOINT:-$PROJECT_ROOT/checkpoints/$EXPERIMENT/checkpoint-last.pth}"
-IMAGENET_PATH=/data0/datasets/imagenet
+IMAGENET_PATH="${IMAGENET_PATH:-/mnt/shared-storage-user/datafactory-share/gushishen/imagenet}"
 export IMAGENET_ROOT="$IMAGENET_PATH"
-export PRETRAIN_MODELS_ROOT=/data0/pretrain_models
-export FID_STATS_ROOT=/data0/zhangruobei/Work/Pixel_Diffusion/fid_stats
+export PRETRAIN_MODELS_ROOT="${PRETRAIN_MODELS_ROOT:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/pretrain_models}"
+export FID_STATS_ROOT="${FID_STATS_ROOT:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/fid_stats}"
 export HF_HUB_OFFLINE=1
-PYTHON_BIN="${PYTHON_BIN:-/data0/zhangruobei/anaconda3/envs/irepa/bin/python}"
+PYTHON_BIN="${PYTHON_BIN:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/envs/irepa-py310-cu126-20261015/bin/python}"
 RDZV_PORT="${RDZV_PORT:-29552}"
-CKPT_CFG="${CKPT_CFG:-2.9}"      # JiT path CFG
-DINO_CFG="${DINO_CFG:-1.0}"      # dino path CFG（1.0=不加引导）
+CKPT_CFG="${CKPT_CFG:-2.9}"
+DINO_CFG="${DINO_CFG:-1.0}"
 DINO_STEPS="${DINO_STEPS:-25}"
 
 source "$PROJECT_ROOT/sh/portable_env.sh"
 CKPT_DIR="$(dirname "$CHECKPOINT")"
 CKPT_TAG="$(basename "$CHECKPOINT" .pth)"
-EVAL_DIR="$CKPT_DIR/eval_${CKPT_TAG}_dinov2b_jitcfg${CKPT_CFG}_dinocfg${DINO_CFG}_dino${DINO_STEPS}_heun50_image50000"
+EVAL_DIR="${EVAL_DIR:-$CKPT_DIR/eval_${CKPT_TAG}_dinov2b_jitcfg${CKPT_CFG}_dinocfg${DINO_CFG}_dino${DINO_STEPS}_heun50_image50000}"
 
 CMD=("$PYTHON_BIN" -m torch.distributed.run
     --rdzv-backend=c10d --rdzv-endpoint="127.0.0.1:$RDZV_PORT" --nnodes=1 --nproc_per_node="$GPUS"
