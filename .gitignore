@@ -7,18 +7,29 @@ __pycache__/
 .venv/
 venv/
 
-# Training outputs, model weights, statistics, and logs
-checkpoints/
-outputs/
-logs/
-wandb/
+# Model weights, latent statistics, datasets, and generated outputs
 *.pt
 *.pth
 *.ckpt
 *.safetensors
-*.npz
 *.npy
-*.log
+*.npz
+*.pkl
+*.pickle
+outputs/
+workdir/
+wandb/
+pretrain_models/
+fid_stats/
+**/checkpoints/.cache/
+**/checkpoints/**/eval_*/
+**/checkpoints/**/epoch*/
+**/checkpoints/**/heun-steps*/
+
+# TensorBoard and sampling logs; train*.log files remain trackable
+events.out.tfevents.*
+**/sampling.log
+**/eval_*.log
 
 # Local credentials and editor configuration
 .env
@@ -35,17 +46,3 @@ credentials*.json
 
 # Local pre-edit file backups
 backups/
-
-# Keep training logs in their experiment directories; exclude sampling and events.
-!checkpoints/
-**/checkpoints/**
-!**/checkpoints/**/
-!**/checkpoints/**/train*.log
-!**/checkpoints/**/launcher.log
-!**/checkpoints/**/pipeline.log
-!**/checkpoints/**/*resume*.log
-!**/checkpoints/**/*watch_stop*.log
-**/checkpoints/.cache/
-**/checkpoints/**/eval_*/
-**/checkpoints/**/heun-steps*/
-!fid_floor/run.log

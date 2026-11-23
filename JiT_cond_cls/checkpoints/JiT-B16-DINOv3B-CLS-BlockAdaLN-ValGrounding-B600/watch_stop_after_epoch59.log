@@ -1,8 +1,0 @@
-Waiting for epoch 59 evaluation in /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/jit_cond_cls/checkpoints/JiT-B16-DINOv3B-CLS-BlockAdaLN-ValGrounding-B600/train.log
-Still waiting; training pane is 'ssh'.
-Still waiting; training pane is 'ssh'.
-Still waiting; training pane is 'ssh'.
-Still waiting; training pane is 'ssh'.
-Evaluation completed: [14:56:27.794037] FID: 9.7988, Inception Score: 123.1597
-Sent Ctrl-C to JiT-B16-DINOv3B-CLS-BlockAdaLN-ValGrounding-B600; waiting for training to exit.
-Training stopped; pane command is 'bash'.

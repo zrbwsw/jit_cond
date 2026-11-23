@@ -13,10 +13,13 @@ run_torch() {
     done
 
     if [[ -z "${PYTHON_BIN:-}" ]]; then
-        PYTHON_BIN="$HOME/anaconda3/envs/irepa/bin/python"
-        [[ -x "$PYTHON_BIN" ]] || PYTHON_BIN=python
+        PYTHON_BIN="/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/envs/irepa-py310-cu126-20261015/bin/python"
     fi
     PYTHON_BIN="$(command -v "$PYTHON_BIN")"
+    export IMAGENET_ROOT="${IMAGENET_ROOT:-/mnt/shared-storage-user/datafactory-share/gushishen/imagenet}"
+    export PRETRAIN_MODELS_ROOT="${PRETRAIN_MODELS_ROOT:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/pretrain_models}"
+    export FID_STATS_ROOT="${FID_STATS_ROOT:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/fid_stats}"
+    export DINOV3_REPO="${DINOV3_REPO:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3}"
     export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2,3,4,5,6,7}"
     IFS=, read -r -a gpus <<< "$CUDA_VISIBLE_DEVICES"
     export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"

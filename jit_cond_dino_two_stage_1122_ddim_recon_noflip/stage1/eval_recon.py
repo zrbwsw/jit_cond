@@ -1,6 +1,8 @@
 """Full validation pass in normalized DINO patch space with the cache/export teacher."""
 import json
 import os
+import sys
+import time
 from pathlib import Path
 
 import torch
@@ -28,6 +30,7 @@ def make_val_loader(args, class_to_idx):
 @torch.no_grad()
 def evaluate_recon(model, loader, device, epoch, output_dir, writer=None):
     # All ranks run the bare model: unequal numbers of batches require no per-batch collective.
+    started = time.monotonic()
     previous_mode = model.training
     totals = torch.zeros(4, device=device, dtype=torch.float64)
     model.eval()
@@ -45,8 +48,18 @@ def evaluate_recon(model, loader, device, epoch, output_dir, writer=None):
                 totals[3] += len(x)
     finally:
         model.train(previous_mode)
+    rank, world_size = misc.get_rank(), misc.get_world_size()
+    local_count = int(totals[3].item())
+    local_expected = len(range(rank, len(loader.dataset), world_size))
+    local_finite = bool(torch.isfinite(totals).all().item())
+    sys.stderr.write(
+        f"[rank {rank}] Local reconstruction validation epoch {epoch}: "
+        f"{local_count}/{local_expected} images, finite={local_finite}, "
+        f"elapsed={time.monotonic() - started:.1f}s\n")
+    sys.stderr.flush()
     if misc.is_dist_avail_and_initialized():
         torch.distributed.all_reduce(totals)
+        torch.distributed.barrier()
     count = int(totals[3].item())
     if count != len(loader.dataset) or not torch.isfinite(totals).all():
         raise RuntimeError(f"Incomplete or non-finite validation at epoch {epoch}: {totals.tolist()}")

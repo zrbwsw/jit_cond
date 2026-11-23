@@ -6,10 +6,11 @@ usage() {
     cat <<'EOF'
 用法：bash sh/run_on_gpu.sh [--dry-run] HOST [COMMAND ARG...]
 
-HOST: agent-gpu-l2-1（当前唯一可用节点）
+HOST: agent-gpu-l2-1 或 agent-gpu-l2-2
 例如：
   bash sh/run_on_gpu.sh agent-gpu-l2-1 bash scripts/train_rmsnorm2_reverse_nomls_B80.sh
   bash sh/run_on_gpu.sh agent-gpu-l2-1 nvidia-smi
+  bash sh/run_on_gpu.sh agent-gpu-l2-2 nvidia-smi
 
 不提供 COMMAND 时，进入 GPU 上的项目目录，打开交互式 Bash。
 优先使用本机 SSH 配置中的别名；无别名时使用下面的集群连接信息。
@@ -36,7 +37,12 @@ case "$gpu_host" in
         worker_name='gpu-lg-cmc-h-h200-0676'
         aliases=(agent-gpu-l2-1)
         ;;
-    *) echo "未知 GPU：$gpu_host（当前仅 agent-gpu-l2-1）" >&2; exit 2 ;;
+    agent-gpu-l2-2)
+        ssh_user='agent-gpu-l2-2-82445275-cfcd2.gushishen+root.ailab-safeshared.pod'
+        worker_name='gpu-lg-cmc-h-h200-0685'
+        aliases=(agent-gpu-l2-2)
+        ;;
+    *) echo "未知 GPU：$gpu_host（使用 agent-gpu-l2-1 或 agent-gpu-l2-2）" >&2; exit 2 ;;
 esac
 
 project_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"

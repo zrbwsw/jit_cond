@@ -14,9 +14,9 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 REPOSITORY_ROOT = PROJECT_ROOT.parent
-DEFAULT_IMAGENET_ROOT = Path("/data0/datasets/imagenet")
+DEFAULT_IMAGENET_ROOT = Path("/mnt/shared-storage-user/datafactory-share/gushishen/imagenet")
 DINOV3_REPO_CANDIDATES = (
-    REPOSITORY_ROOT.parent / "Pixel_Diffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3",
+    Path("/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3"),
     REPOSITORY_ROOT / "dinov3",
 )
 DINOV3_B16_WEIGHTS = "dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth"
@@ -41,7 +41,7 @@ def imagenet_root(value: str | os.PathLike[str] | None = None) -> Path:
 def pretrain_models_root(value: str | os.PathLike[str] | None = None) -> Path:
     default = REPOSITORY_ROOT / "pretrain_models"
     if not default.is_dir():
-        default = Path("/data0/pretrain_models")
+        default = Path("/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/pretrain_models")
     return _resolve(value) if value is not None else _env_path("PRETRAIN_MODELS_ROOT", default)
 
 
@@ -75,7 +75,7 @@ def dinov3_weights_path(value: str | os.PathLike[str] | None = None) -> Path:
 def fid_stats_root(value: str | os.PathLike[str] | None = None) -> Path:
     default = REPOSITORY_ROOT / "fid_stats"
     if not default.is_dir():
-        default = REPOSITORY_ROOT.parent / "Pixel_Diffusion/fid_stats"
+        default = REPOSITORY_ROOT.parent / "Pixel_DIffusion/fid_stats"
     return _resolve(value) if value is not None else _env_path("FID_STATS_ROOT", default)
 
 

@@ -40,18 +40,19 @@ def add_training_args(parser, *, epochs):
     parser.add_argument('--output_dir', default='')
     parser.add_argument('--resume', default='', help='Checkpoint from the same stage')
     parser.add_argument('--save_last_freq', default=5, type=int)
-    parser.add_argument('--save_interval', default=20, type=int)
+    parser.add_argument('--save_interval', default=80, type=int)
     parser.add_argument('--log_freq', default=100, type=int)
     parser.add_argument('--device', default='cuda')
     parser.add_argument('--world_size', default=1, type=int)
     parser.add_argument('--local_rank', '--local-rank', default=-1, type=int)
     parser.add_argument('--dist_on_itp', action='store_true')
     parser.add_argument('--dist_url', default='env://')
+    parser.add_argument('--dist_timeout', default=60, type=int, help='Distributed collective timeout in minutes')
 
 
 def validate_training_args(args):
-    if min(args.epochs, args.batch_size, args.save_last_freq, args.save_interval, args.log_freq) < 1:
-        raise ValueError('epochs, batch_size and save/log frequencies must be positive')
+    if min(args.epochs, args.batch_size, args.save_last_freq, args.save_interval, args.log_freq, args.dist_timeout) < 1:
+        raise ValueError('epochs, batch_size, save/log frequencies and distributed timeout must be positive')
 
 
 def resolve_checkpoint(path):

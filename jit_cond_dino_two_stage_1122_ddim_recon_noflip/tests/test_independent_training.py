@@ -411,6 +411,15 @@ def test_inverse_grid_and_explicit_decode(args, method, monkeypatch):
     assert max(times) < 1
 
 
+def test_export_rank_batches_partition():
+    from stage1.export_recon import rank_batches
+
+    batches = [batch for rank in range(8) for batch in rank_batches(range(103), rank, 8, 16)]
+    assert sorted(batch[0] // 16 for batch in batches) == list(range(7))
+    assert sorted(index for batch in batches for index in batch) == list(range(103))
+    assert rank_batches(range(0), 0, 8, 16) == []
+
+
 def test_cached_training_and_export(args, tmp_path, monkeypatch):
     import numpy as np
     from PIL import Image

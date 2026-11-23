@@ -39,7 +39,7 @@ def add_training_args(parser, *, epochs):
     parser.add_argument('--output_dir', default='')
     parser.add_argument('--resume', default='', help='Checkpoint from the same stage')
     parser.add_argument('--save_last_freq', default=5, type=int)
-    parser.add_argument('--save_interval', default=20, type=int)
+    parser.add_argument('--save_interval', default=80, type=int)
     parser.add_argument('--log_freq', default=100, type=int)
     parser.add_argument('--device', default='cuda')
     parser.add_argument('--world_size', default=1, type=int)

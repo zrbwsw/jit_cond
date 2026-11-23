@@ -1,0 +1,11 @@
+{
+  "epoch": 80,
+  "images": 50000,
+  "weights": "ema1",
+  "steps": 25,
+  "method": "heun",
+  "cfg": 1.0,
+  "mse": 0.02533584765514359,
+  "relative_l2": 0.15991890874639156,
+  "patch_cosine": 0.9869619252604247
+}

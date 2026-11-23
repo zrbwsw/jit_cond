@@ -119,7 +119,7 @@ def get_args_parser():
                         help='Exact checkpoint file for --evaluate_gen (overrides --resume/checkpoint-last.pth)')
     parser.add_argument('--save_last_freq', type=int, default=5,
                         help='Frequency (in epochs) to save checkpoints')
-    parser.add_argument('--save_interval', type=int, default=20,
+    parser.add_argument('--save_interval', type=int, default=80,
                         help='Frequency (in epochs) to save checkpoints')
     parser.add_argument('--log_freq', default=100, type=int)
     parser.add_argument('--device', default='cuda',

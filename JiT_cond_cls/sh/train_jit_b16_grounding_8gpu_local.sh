@@ -38,7 +38,7 @@ CMD=("$PYTHON_BIN" -m torch.distributed.run --standalone --nproc_per_node="$GPUS
     --epochs 600 --warmup_epochs 5
     --gen_bsz 256 --num_images 50000 --cfg 2.9 --interval_min 0.1 --interval_max 1.0
     --sampling_method heun --num_sampling_steps 50
-    --eval_freq 20 --save_last_freq 5 --save_interval 20
+    --eval_freq 20 --save_last_freq 5 --save_interval 80
     --output_dir "$OUTPUT_DIR" --resume "$OUTPUT_DIR"
     --data_path "$IMAGENET_PATH" --online_eval
     --use_grounding --grounding_model dinov3_vitb16 --grounding_dim 768
