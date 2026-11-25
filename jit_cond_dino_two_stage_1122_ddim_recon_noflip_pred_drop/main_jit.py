@@ -25,6 +25,8 @@ def get_args_parser():
     parser.add_argument('--model', default='JiT-B/16')
     parser.add_argument('--verify_cache_hashes', action='store_true')
     parser.add_argument('--grounding_cache', default='', help='Completed train cache directory')
+    parser.add_argument('--cache_cfg_dino', default=None, type=float,
+                        help='CFG used to create the offline cache; defaults to cfg_dino for compatibility')
     parser.add_argument('--condition_mode_pixel', choices=['noised', 'pred', 'cached_recon'], default='cached_recon',
                         help='Stage 2 grounding: cached per-image reconstruction (default) or online ablations')
     parser.add_argument('--noise_beta_dino_pixel', '--dino_noise_beta', default=0.25, type=float)

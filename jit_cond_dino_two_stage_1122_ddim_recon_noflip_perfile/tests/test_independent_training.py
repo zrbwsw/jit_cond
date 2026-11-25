@@ -465,6 +465,8 @@ def test_cached_training_and_export(args, tmp_path, monkeypatch):
     args.training_stage = "pixel"
     pixel = denoiser.Denoiser(args)
     load_branch(pixel, read_checkpoint(args.dino_checkpoint), "dino_net", "ema1", args)
+    args.cfg_dino = 2.0
+    args.cache_cfg_dino = 1.0
     data = cached_dataset(args, pixel)
     folder = ImageFolder(Path(args.data_path) / "train")
     assert not torch.equal(data[0][2], data[1][2])

@@ -11,13 +11,14 @@ if [[ -z "${CHECKPOINT:-}" ]]; then
     exit 2
 fi
 EVAL_ROOT="${EVAL_ROOT:-$(dirname "$CHECKPOINT")}"
+CHECKPOINT_TAG="$(basename "${CHECKPOINT%.pth}")"
 if [[ $# -gt 1 || ( $# -eq 1 && "${1:-}" != --dry-run ) ]]; then
     echo '用法：CHECKPOINT=/abs/checkpoint-80.pth GPU_HOST=agent-gpu-l2-1 bash sh/sample_stage2_ckpt_scales.sh [--dry-run]' >&2
     exit 2
 fi
 
 for jit_cfg in $JIT_CFG_LIST; do
-    eval_dir="$EVAL_ROOT/eval_checkpoint-80_jitcfg${jit_cfg}_dinocfg${DINO_CFG}_dino25_heun50_image50000"
+    eval_dir="$EVAL_ROOT/eval_${CHECKPOINT_TAG}_jitcfg${jit_cfg}_dinocfg${DINO_CFG}_dino25_heun50_image50000"
     sampling_log="$eval_dir/sampling.log"
     if [[ "${1:-}" != --dry-run && -f "$sampling_log" ]] && "$PYTHON_BIN" -c \
         'import pathlib, sys; sys.exit(0 if "FID:" in pathlib.Path(sys.argv[1]).read_text(errors="replace") else 1)' \

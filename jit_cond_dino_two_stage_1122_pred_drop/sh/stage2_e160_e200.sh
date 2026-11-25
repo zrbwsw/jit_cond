@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-GPU_HOST="${GPU_HOST:-agent-gpu-l2-1}"
+GPU_HOST="${GPU_HOST:-agent-gpu-l2-2}"
 CONDITION_MODE="${CONDITION_MODE:-pred}"
 EPOCHS="${EPOCHS:-200}"
 PYTHON_BIN="${PYTHON_BIN:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/envs/irepa-py310-cu126-20261015/bin/python}"
-DINO_CHECKPOINT="${DINO_CHECKPOINT:-$PROJECT_ROOT/checkpoints/stage1-dinov3b-dinodit-b-e160/checkpoint-160.pth}"
+DINO_CHECKPOINT="${DINO_CHECKPOINT:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122/checkpoints/stage1-dinov3b-dinodit-b-e160/checkpoint-160.pth}"
 DINO_STAT_PATH="${DINO_STAT_PATH:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/JiT_cond_join_dino/stat/dinov3b_rae_imagenet1k_stats.pt}"
 OUTPUT_DIR="${OUTPUT_DIR:-$PROJECT_ROOT/checkpoints/stage1-dinov3b-dinodit-b-e160-stage2-pixeljit-b-dinodit-${CONDITION_MODE}-e${EPOCHS}}"
 if [[ "$CONDITION_MODE" != noised && "$CONDITION_MODE" != pred ]]; then

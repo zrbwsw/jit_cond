@@ -85,10 +85,13 @@ def cached_dataset(args, model):
     if manifest["id"] != cache_id or getattr(args, "expected_cache_id", cache_id) != cache_id:
         raise ValueError("Wrong cache manifest or resumed cache_id")
     folder = ImageFolder(str(Path(args.data_path) / "train"))
+    cache_cfg = getattr(args, "cache_cfg_dino", None)
+    if cache_cfg is None:
+        cache_cfg = args.cfg_dino
     expected = dict(version=2, transform="adm_center_noflip", layout="row,HW,C", split="train", size=args.img_size, latent=args.latent_spec,
                     count=len(folder), dataset=dataset_hash(folder), teacher=teacher_hash(model),
                     weights=args.dino_weights, noise_scale=args.noise_scale_dino, t_eps=args.t_eps,
-                    steps=args.steps_dino, method=args.sampling_method_dino, cfg=args.cfg_dino,
+                    steps=args.steps_dino, method=args.sampling_method_dino, cfg=cache_cfg,
                     interval=[args.interval_min_dino, args.interval_max_dino])
     for key, value in expected.items():
         if spec.get(key) != value:

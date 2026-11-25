@@ -1,0 +1,2 @@
+[2026-11-23T19:58:49] Stopping launcher 395606 and 8 ranks after validating /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122_ddim_recon_noflip/checkpoints/stage1-dinov3b-dinodit-b-recon-noflip-e200/checkpoint-160.pth
+[2026-11-23T19:58:52] noflip Stage 1 stopped; checkpoint-160.pth and logs were preserved

@@ -120,6 +120,9 @@ def cached_dataset(args, model):
         )
 
     folder = ImageFolder(str(Path(args.data_path) / "train"))
+    cache_cfg = getattr(args, "cache_cfg_dino", None)
+    if cache_cfg is None:
+        cache_cfg = args.cfg_dino
     expected = dict(
         version=3,
         transform="adm_center_noflip",
@@ -135,7 +138,7 @@ def cached_dataset(args, model):
         t_eps=args.t_eps,
         steps=args.steps_dino,
         method=args.sampling_method_dino,
-        cfg=args.cfg_dino,
+        cfg=cache_cfg,
         interval=[args.interval_min_dino, args.interval_max_dino],
     )
     for key, value in expected.items():
