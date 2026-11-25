@@ -110,6 +110,48 @@ def test_pixel_condition_freeze_and_time_tag(args, mode):
     assert {id(p) for p in params} == {id(model.net.weight)}
 
 
+@pytest.mark.parametrize('mode', ['pred', 'noised'])
+def test_real_grounding_evaluation_bypasses_dino_and_preserves_noise(args, mode):
+    from grounding_evaluation import RealGroundingSampler
+
+    args.condition_mode_pixel = mode
+
+    class Provider:
+        def __init__(self):
+            self.num_classes = args.class_num
+            self.calls = []
+
+        def load_batch(self, labels, intra_indices):
+            self.calls.append((labels.copy(), intra_indices.copy()))
+            return torch.ones(len(labels), 3, 32, 32)
+
+    provider = Provider()
+    model = denoiser.Denoiser(args).eval()
+    model.steps_pixel = 1
+    model.sample_dino_latent = RealGroundingSampler(model, provider, num_images=8, batch_size=3)
+    labels = torch.tensor([0, 0, 1])
+    torch.manual_seed(7)
+    torch.randn(3, 8, 2, 2)
+    torch.randn(3, 3, 32, 32)
+    expected_rng_state = torch.random.get_rng_state()
+    torch.manual_seed(7)
+    images = model.generate(labels)
+    assert images.shape == (3, 3, 32, 32)
+    assert torch.equal(torch.random.get_rng_state(), expected_rng_state)
+    assert provider.calls[0][0].tolist() == [0, 0, 1]
+    assert provider.calls[0][1].tolist() == [0, 1, 0]
+    assert not model.dino_net.calls
+    assert len(model.net.calls) == 2
+    for _, _, t_dino in model.net.calls:
+        torch.testing.assert_close(t_dino, torch.ones_like(t_dino))
+
+    rank_sampler = RealGroundingSampler(
+        model, provider, False, num_images=8, batch_size=2, world_size=2, rank=1)
+    rank_sampler(torch.tensor([1, 1]))
+    assert provider.calls[-1][0].tolist() == [1, 1]
+    assert provider.calls[-1][1].tolist() == [0, 1]
+
+
 def test_label_dropout_masks_pixel_not_teacher(args):
     args.label_drop_prob = 1.0
     model = denoiser.Denoiser(args)
