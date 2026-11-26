@@ -6,7 +6,7 @@ import time
 
 import torch
 
-from checkpoint_io import initialize_ema, load_branch, read_checkpoint, resume_model
+from checkpoint_io import initialize_ema, latent_spec, load_branch, read_checkpoint, resume_model
 from denoiser import Denoiser
 from engine_jit import evaluate
 from util.train_epoch import train_one_epoch
@@ -28,6 +28,10 @@ def get_args_parser():
                         help='Path to dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth')
     parser.add_argument('--dino_encoder_repo', default=None,
                         help='Path to DINOv3 source directory (containing hubconf.py)')
+    parser.add_argument('--raev2_checkpoint', default='',
+                        help='RAEv2 stage-2 EMA checkpoint used for latent sampling')
+    parser.add_argument('--raev2_config', default='',
+                        help='RAEv2 sampling YAML used for latent sampling')
 
     # Pixel JiT 参数
     parser.add_argument('--model', default='JiT-B/16')
@@ -40,11 +44,8 @@ def get_args_parser():
     parser.add_argument('--interval_min_pixel', '--interval_min', default=0.1, type=float)
     parser.add_argument('--interval_max_pixel', '--interval_max', default=1.0, type=float)
 
-    # 通用参数（从 add_training_args 继承 img_size, class_num 等）
-    parser.add_argument('--t_eps', default=5e-2, type=float)
-    parser.add_argument('--label_drop_prob', default=0.1, type=float)
-
     # 评估参数
+    parser.add_argument('--dist_timeout', default=60, type=int)
     parser.add_argument('--num_images', default=50000, type=int)
     parser.add_argument('--gen_bsz', default=64, type=int)
     parser.add_argument('--eval_freq', default=20, type=int)
@@ -80,6 +81,8 @@ def validate_args(args):
         raise ValueError('Resume uses weights from checkpoint; cannot also set --init_pixel')
     elif args.evaluate_gen and not checkpoint_path:
         raise ValueError('--evaluate_gen requires --checkpoint or --resume')
+    if (args.online_eval or args.evaluate_gen) and (not args.raev2_checkpoint or not args.raev2_config):
+        raise ValueError('RAEv2 sampling requires --raev2_checkpoint and --raev2_config')
 
     return checkpoint_path
 
@@ -100,6 +103,7 @@ def main(args):
             folder = Path('checkpoints') / name
         args.output_dir = str(folder)
 
+    args.latent_spec = latent_spec(args)
     device, seed = initialize_run(args)
 
     # 创建模型（DINOv3-L k=7 encoder 在 Denoiser.__init__ 中加载）

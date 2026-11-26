@@ -1,161 +1,55 @@
 # jit_cond_dino_two_stage_1122_raev2
 
-**使用 RAEv2 DINOv3-L k=7 encoder 作为 Pixel JiT 的条件**
+## 方法
 
----
+### 训练：真实图片 clean grounding
 
-## 核心设计
+冻结 RAEv2 DINOv3-L k=7 encoder，聚合第 `[11,13,15,17,19,21,23]` 层，计算七层均值并加上最后一层的空间均值，再用 `stats.pt` 做 z-score 归一化，输出 `[B,1024,16,16]`。Pixel JiT 使用这些 patch tokens 学习 RGB 流匹配损失。类别 dropout 同时屏蔽类别和 grounding。
 
-### Stage 1：DINOv3-L k=7 Encoder（冻结，无需训练）
+### 在线评估和采样：RAEv2 EMA latent grounding
 
-- **只用 encoder**：DINOv3-L 聚合 7 层特征 [12,14,16,18,20,22,24]
-- **输出**：[B, 1024, 16, 16] z-score 归一化的 latent
-- **不需要 decoder**：Pixel JiT 本身就是 decoder（latent → pixel）
+`raev2_latent_sampler.py` 直接复用 RAEv2 官方 `instantiate_from_config`、transport、sampler 和 guidance 实现，严格加载 Stage 2 checkpoint 中的 `ema` 权重。`Denoiser.generate` 先采样 RAEv2 latent，再执行 Pixel Heun-50。
 
-### Stage 2：Pixel JiT（需要训练）
+在线评估固定使用：
 
-**训练**：
-```python
-# 条件：使用 clean image 的 latent（保留完整实例信息）
-clean_latent = dinov3_k7_encoder.encode(clean_image)  # [B, 1024, 16, 16]
+`Pixel_DIffusion/RAEv2/configs/stage2/sampling/imagenet-dinov3l-k7.yaml`
 
-# 像素去噪训练
-z_pixel = t * clean_image + (1 - t) * noise
-x_pred = pixel_jit(z_pixel, t, label, grounding=clean_latent)
-loss = v_loss(x_pred, clean_image, z_pixel, t)
-```
+其配置为：100 步、CFG 1.0、IG 1.78、CFG 区间 `[0,1]`、IG 区间 `[0.1,1]`、latent `[1024,16,16]`。不要用 DinoDiT 的 25 步配置替换它。
 
-**推理**：
-```python
-# 步骤 1：采样语义 latent（调用 RAEv2 Stage 1 完整采样）
-z_latent = raev2_stage1_sample(randn(), labels)  # 需要 RAEv2 环境
+## 本机资源
 
-# 步骤 2：以 z_latent 为条件，采样像素
-image = pixel_jit_sample(randn(), labels, grounding=z_latent)
-```
+- DINOv3-L 权重：`Pixel_DIffusion/pretrain_models/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth`（已存在，无需下载）。
+- DINOv3 源码：`Pixel_DIffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3`。
+- Latent stats：`stat/dinov3l_k7_imagenet1k_stats.pt`，软链接到 `RAEv2/stage1/imagenet/dinov3l-k7/stats.pt`。
+- RAEv2 生成模型：`RAEv2/stage2/imagenet/dinov3l-k7/checkpoint.pt`，使用其中的 `ema` 分支。
+- RAEv2 源码和采样配置：`Pixel_DIffusion/RAEv2`。
 
-**关键优势**：
-- ✅ 训练用 clean latent，保留完整实例信息
-- ✅ 推理用 RAEv2 采样的 latent，保证语义合理
-- ✅ 两者都是归一化后的分布，训练/推理对齐
-- ✅ 无需训练 Stage 1，直接复用 RAEv2 预训练
-
----
-
-## 与原版 DinoDiT 的对比
-
-| 项目 | 原版（DinoDiT） | RAEv2 版本 |
-|------|----------------|-----------|
-| **Stage 1** | 训练 DinoDiT（E160） | **无需训练**，直接用 DINOv3-L k=7 |
-| **Encoder** | DINOv3-B/16 单层 | DINOv3-L/16 k=7（7层聚合） |
-| **Latent 维度** | [B, 768, 16, 16] | [B, 1024, 16, 16] |
-| **训练条件** | noised/pred/cached | **clean latent**（最强实例信息） |
-| **推理条件** | DinoDiT 采样 | RAEv2 Stage 1 采样 |
-| **Decoder** | DinoDiT decoder | **Pixel JiT 本身** |
-
----
-
-## 使用方法
-
-### 1. 下载统计文件（必需）
+## 训练与续训
 
 ```bash
-cd stat
-wget https://huggingface.co/nyu-visionx/RAEv2-models/resolve/main/stage1/imagenet/dinov3l-k7/stats.pt \
-    -O dinov3l_k7_imagenet1k_stats.pt
+bash sh/train_pixel_raev2.sh --dry-run
+GPU_HOST=agent-gpu-l2-1 bash sh/train_pixel_raev2.sh
 ```
 
-### 2. 修改训练脚本路径
+默认输出：
 
-编辑 `sh/train_pixel_raev2.sh`，设置：
-- `IMAGENET` - ImageNet 数据集路径
-- `DINOV3_REPO` - DINOv3 源码目录（包含 hubconf.py）
+`checkpoints/stage1-raev2-dinov3l-k7-stage2-pixeljit-b-e160`
 
-### 3. 启动训练
+默认每卡 batch 128、global batch 1024、`blr=5e-5`、160 epoch。每 5 epoch 更新 `checkpoint-last.pth`，每 80 epoch 保存编号 checkpoint，每 20 epoch 在线生成 50K 图片计算 FID/IS。
+
+续训：
 
 ```bash
-bash sh/train_pixel_raev2.sh
+RESUME=$PWD/checkpoints/stage1-raev2-dinov3l-k7-stage2-pixeljit-b-e160/checkpoint-last.pth \
+  GPU_HOST=agent-gpu-l2-1 bash sh/train_pixel_raev2.sh
 ```
 
----
+`RESUME` 只恢复 Pixel JiT、optimizer、EMA 和 epoch。RAEv2 teacher 仍由 `RAEV2_CHECKPOINT` 和 `RAEV2_CONFIG` 指定。
 
-## 推理（需要 RAEv2 环境）
+## 验证
 
-推理时需要从 RAEv2 Stage 1 采样 latent。两种方案：
+- `test_encoder.py`：真实 DINOv3-L k=7 前向，检查 `[2,1024,16,16]`。
+- `tests/test_independent_training.py`：clean grounding、dropout、CFG、EMA、checkpoint 和官方采样配置。
+- `raev2_latent_sampler.py`：已验证实际 EMA checkpoint 采样输出及有限性。
 
-### 方案 1：在 RAEv2 环境中预先采样 latent
-
-```bash
-# 1. 在 RAEv2 环境中采样 latent
-cd /path/to/RAEv2
-python scripts/stage1/sample.py \
-    --encoder dinov3mls-vit-l16[layers=11.13.15.17.19.21.23] \
-    --decoder pretrained_models/stage1/imagenet/dinov3l-k7/decoder.pt \
-    --normalization_stat_path pretrained_models/stage1/imagenet/dinov3l-k7/stats.pt \
-    --num_samples 50000 \
-    --output latents.pt
-
-# 2. 在 Pixel JiT 环境中读取 latent 并生成图像
-cd /path/to/jit_cond_dino_two_stage_1122_raev2
-python sample_with_precomputed_latents.py \
-    --checkpoint checkpoints/.../checkpoint-160.pth \
-    --latents /path/to/latents.pt \
-    --output samples/
-```
-
-### 方案 2：集成 RAEv2 decoder（待实现）
-
-将 RAEv2 的 ViTMAEDecoder 复制到本项目，实现端到端采样。
-
----
-
-## 预期结果
-
-| 配置 | FID | 对比 pred 4.71 | 理由 |
-|------|-----|---------------|------|
-| **DINOv3-L k=7 + clean** | **4.2–4.4** | **−0.3 to −0.5** | 更强 encoder + 完整实例信息 |
-
-**优势**：
-- **无需 Stage 1 训练**：节省 E160 训练成本
-- **更强 encoder**：DINOv3-L k=7 比 DINOv3-B 单层更强
-- **最强实例信息**：训练时用 clean latent（100% 实例信息）
-- **更大容量**：1024 维 vs 768 维
-
----
-
-## 文件清单
-
-```
-jit_cond_dino_two_stage_1122_raev2/
-├── stage1/
-│   └── dinov3_k7_encoder.py       # DINOv3-L k=7 encoder 实现
-├── stat/
-│   ├── DOWNLOAD.md                # 统计文件下载说明
-│   └── dinov3l_k7_imagenet1k_stats.pt  # 需从 HuggingFace 下载
-├── sh/
-│   └── train_pixel_raev2.sh       # 训练脚本
-├── denoiser.py                    # Pixel JiT（使用 clean latent）
-├── main_jit.py                    # 训练主程序
-├── checkpoint_io.py               # Checkpoint I/O（简化版）
-└── README_raev2.md                # 本文档
-```
-
----
-
-## 实现状态
-
-### ✅ 已完成
-
-- DINOv3-L k=7 encoder 实现
-- Denoiser 修改（使用 clean latent）
-- main_jit.py 参数调整
-- checkpoint_io.py 简化
-- 训练脚本
-
-### 🔄 H200 上需要做的
-
-1. 下载统计文件（见上方步骤 1）
-2. 修改训练脚本路径（见上方步骤 2）
-3. 启动训练（见上方步骤 3）
-
-代码已全部完成，可在 H200 上下载统计文件后启动训练。
+当前没有该方法的训练结果，不预设 FID/IS。

@@ -121,8 +121,8 @@ class DINOv3Lk7Encoder(nn.Module):
 
         if mean is None:
             mean = torch.zeros(self.embed_dim)
-        self.register_buffer("latent_mean", mean.view(1, -1, 1, 1), persistent=False)
-        self.register_buffer("latent_var", var.view(1, -1, 1, 1), persistent=False)
+        self.register_buffer("latent_mean", mean.unsqueeze(0), persistent=False)
+        self.register_buffer("latent_var", var.unsqueeze(0), persistent=False)
 
     def _resolve_stat_path(self, override: Optional[str]) -> Path:
         """查找 DINOv3-L k=7 的统计文件。"""

@@ -3,4 +3,4 @@
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT/sh/launch_common.sh"
-run_torch main_jit.py --evaluate_gen --dino_encoder "${DINO_ENCODER:-dinov3b}" "$@"
+run_torch main_jit.py --evaluate_gen "$@"
