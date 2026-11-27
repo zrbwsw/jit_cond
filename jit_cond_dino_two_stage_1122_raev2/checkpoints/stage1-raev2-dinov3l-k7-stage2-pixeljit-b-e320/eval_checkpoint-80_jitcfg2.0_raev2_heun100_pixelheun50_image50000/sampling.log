@@ -1,0 +1,112 @@
+/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/envs/irepa-py310-cu126-20261015/bin/python -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=8 main_jit.py --evaluate_gen --checkpoint /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122_raev2/checkpoints/stage1-raev2-dinov3l-k7-stage2-pixeljit-b-e320/checkpoint-80.pth --dino_stat_path /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122_raev2/stat/dinov3l_k7_imagenet1k_stats.pt --dino_encoder_weights_path /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/pretrain_models/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth --dino_encoder_repo /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3 --raev2_checkpoint /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/RAEv2/stage2/imagenet/dinov3l-k7/checkpoint.pt --raev2_config /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/RAEv2/configs/stage2/sampling/imagenet-dinov3l-k7.yaml --data_path /mnt/shared-storage-user/datafactory-share/gushishen/imagenet --output_dir /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122_raev2/checkpoints/stage1-raev2-dinov3l-k7-stage2-pixeljit-b-e320/eval_checkpoint-80_jitcfg2.0_raev2_heun100_pixelheun50_image50000 --seed 0 --steps_pixel 50 --sampling_method_pixel heun --cfg_pixel 2.0 --interval_min_pixel 0.1 --interval_max_pixel 1.0 --gen_bsz 256 --num_images 50000 
+| distributed init (rank 0): env://, gpu 0
+[rank0]:[W1126 09:30:57.380082108 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 1): env://, gpu 1
+| distributed init (rank 5): env://, gpu 5
+[rank1]:[W1126 09:30:57.404675187 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 7): env://, gpu 7
+| distributed init (rank 6): env://, gpu 6
+[rank5]:[W1126 09:30:57.408793832 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 5]  using GPU 5 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 2): env://, gpu 2
+| distributed init (rank 4): env://, gpu 4
+[rank6]:[W1126 09:30:57.410433287 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 6]  using GPU 6 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[rank7]:[W1126 09:30:57.410697468 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 7]  using GPU 7 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[rank2]:[W1126 09:30:57.412889017 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 2]  using GPU 2 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[rank4]:[W1126 09:30:57.413159215 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 4]  using GPU 4 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 3): env://, gpu 3
+[rank3]:[W1126 09:30:57.424778795 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 3]  using GPU 3 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[09:31:00.033119] Arguments:
+Namespace(img_size=256,
+class_num=1000,
+attn_dropout=0.0,
+proj_dropout=0.0,
+t_eps=0.05,
+label_drop_prob=0.1,
+epochs=200,
+warmup_epochs=5,
+batch_size=128,
+lr=None,
+blr=5e-05,
+min_lr=0.0,
+lr_schedule='constant',
+weight_decay=0.0,
+ema_decay1=0.9999,
+ema_decay2=0.9996,
+seed=0,
+start_epoch=0,
+num_workers=12,
+pin_mem=True,
+data_path='/mnt/shared-storage-user/datafactory-share/gushishen/imagenet',
+output_dir='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122_raev2/checkpoints/stage1-raev2-dinov3l-k7-stage2-pixeljit-b-e320/eval_checkpoint-80_jitcfg2.0_raev2_heun100_pixelheun50_image50000',
+resume='',
+save_last_freq=5,
+save_interval=80,
+log_freq=100,
+device='cuda',
+world_size=8,
+local_rank=-1,
+dist_on_itp=False,
+dist_url='env://',
+dino_stat_path='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122_raev2/stat/dinov3l_k7_imagenet1k_stats.pt',
+dino_encoder_weights_path='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/pretrain_models/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth',
+dino_encoder_repo='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3',
+raev2_checkpoint='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/RAEv2/stage2/imagenet/dinov3l-k7/checkpoint.pt',
+raev2_config='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/RAEv2/configs/stage2/sampling/imagenet-dinov3l-k7.yaml',
+model='JiT-B/16',
+t_mean_pixel=-0.8,
+t_std_pixel=0.8,
+noise_scale_pixel=1.0,
+steps_pixel=50,
+sampling_method_pixel='heun',
+cfg_pixel=2.0,
+interval_min_pixel=0.1,
+interval_max_pixel=1.0,
+dist_timeout=60,
+num_images=50000,
+gen_bsz=256,
+eval_freq=20,
+online_eval=False,
+evaluate_gen=True,
+checkpoint='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122_raev2/checkpoints/stage1-raev2-dinov3l-k7-stage2-pixeljit-b-e320/checkpoint-80.pth',
+init_pixel='',
+init_pixel_weights='model',
+training_stage='pixel',
+latent_spec={'encoder': 'dinov3l-k7',
+'stats_sha256': '40e57d9d38a267dc258043c081094d276382c29ebccc1bd8c38f4dd11e81ba77',
+'normalization': 'raev2_multilayer_mean_plus_global_zscore_eps1e-5'},
+rank=0,
+gpu=0,
+distributed=True,
+dist_backend='nccl')
+[09:31:11.378065] Resumed Pixel JiT checkpoint at epoch 80
+[09:31:11.460287] Loaded Pixel checkpoint: /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122_raev2/checkpoints/stage1-raev2-dinov3l-k7-stage2-pixeljit-b-e320/checkpoint-80.pth
+[09:31:11.481374] Save to: /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122_raev2/checkpoints/stage1-raev2-dinov3l-k7-stage2-pixeljit-b-e320/eval_checkpoint-80_jitcfg2.0_raev2_heun100_pixelheun50_image50000/epoch80-dinoraev2-steps100-cfg1.0-interval0.0-1.0_pixelheun-steps50-cfg2.0-interval0.1-1.0-image50000-res256
+[09:31:11.509387] Generation step 0/25
+[09:31:28.594455] Loaded stage2.models.DDT.DiTwDDTHeadIG from /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/RAEv2/stage2/imagenet/dinov3l-k7/checkpoint.pt
+[09:31:29.575842] RAEv2 sampler ready: steps=100, CFG=1.0, IG=1.78, latent_size=(1024, 16, 16)
+[09:32:53.533727] Generation step 1/25
+[09:34:14.810812] Generation step 2/25
+[09:35:36.248311] Generation step 3/25
+[09:37:00.545995] Generation step 4/25
+[09:38:22.739359] Generation step 5/25
+[09:39:44.557053] Generation step 6/25
+[09:41:06.956203] Generation step 7/25
+[09:42:28.971315] Generation step 8/25
+[09:43:50.744581] Generation step 9/25
+[09:45:12.576343] Generation step 10/25
+[09:46:34.441627] Generation step 11/25
+[09:47:56.017010] Generation step 12/25
+[09:49:17.683828] Generation step 13/25
+[09:50:39.295883] Generation step 14/25
+[09:52:00.948193] Generation step 15/25
+[09:53:22.455822] Generation step 16/25
+[09:54:44.712033] Generation step 17/25
+[09:56:06.320302] Generation step 18/25
+[09:57:27.919010] Generation step 19/25
+[09:58:49.358420] Generation step 20/25
+[10:00:11.038172] Generation step 21/25
+[10:01:32.538111] Generation step 22/25
+[10:02:53.796784] Generation step 23/25
+[10:04:15.383950] Generation step 24/25
+[10:06:09.456839] FID: 3.5023, Inception Score: 231.8547
+[rank0]:[W1126 10:06:19.803159789 ProcessGroupNCCL.cpp:1476] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())

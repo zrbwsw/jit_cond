@@ -1,0 +1,96 @@
+Current online evaluation completed: [12:58:08.688939] FID: 13.8621, Inception Score: 156.7113
+Stopped E160 torchrun launcher pid=202775
+GPU keepalive stopped
+Connection to h.pjlab.org.cn closed.
+Verified resume checkpoint epoch=20
+Renamed experiment directory to /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122_raev2/checkpoints/stage1-raev2-dinov3l-k7-stage2-pixeljit-b-noised-e80
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+| distributed init (rank 0): env://, gpu 0
+| distributed init (rank 2): env://, gpu 2
+[rank2]:[W1127 12:58:59.950792863 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 2]  using GPU 2 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 6): env://, gpu 6
+[rank6]:[W1127 12:58:59.954559284 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 6]  using GPU 6 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 7): env://, gpu 7
+| distributed init (rank 5): env://, gpu 5
+[rank7]:[W1127 12:58:59.960253368 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 7]  using GPU 7 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[rank5]:[W1127 12:58:59.960279269 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 5]  using GPU 5 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 1): env://, gpu 1
+| distributed init (rank 4): env://, gpu 4
+[rank1]:[W1127 12:58:59.975421436 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[rank4]:[W1127 12:58:59.975482513 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 4]  using GPU 4 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 3): env://, gpu 3
+[rank3]:[W1127 12:58:59.979505821 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 3]  using GPU 3 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[rank0]:[W1127 12:58:59.990083214 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[12:59:01.539888] Arguments:
+Namespace(img_size=256,
+class_num=1000,
+attn_dropout=0.0,
+proj_dropout=0.0,
+t_eps=0.05,
+label_drop_prob=0.1,
+epochs=80,
+warmup_epochs=5,
+batch_size=128,
+lr=None,
+blr=5e-05,
+min_lr=0.0,
+lr_schedule='constant',
+weight_decay=0.0,
+ema_decay1=0.9999,
+ema_decay2=0.9996,
+seed=0,
+start_epoch=0,
+num_workers=12,
+pin_mem=True,
+data_path='/mnt/shared-storage-user/datafactory-share/gushishen/imagenet',
+output_dir='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122_raev2/checkpoints/stage1-raev2-dinov3l-k7-stage2-pixeljit-b-noised-e80',
+resume='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122_raev2/checkpoints/stage1-raev2-dinov3l-k7-stage2-pixeljit-b-noised-e80/checkpoint-20.pth',
+save_last_freq=5,
+save_interval=80,
+log_freq=100,
+device='cuda',
+world_size=8,
+local_rank=-1,
+dist_on_itp=False,
+dist_url='env://',
+dino_stat_path='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122_raev2/stat/dinov3l_k7_imagenet1k_stats.pt',
+dino_encoder_weights_path='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/pretrain_models/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth',
+dino_encoder_repo='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/Ours_BaseT_rmsnorm2_Residual_1016/SSL_code/dinov3',
+raev2_checkpoint='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/RAEv2/stage2/imagenet/dinov3l-k7/checkpoint.pt',
+raev2_config='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/Pixel_DIffusion/RAEv2/configs/stage2/sampling/imagenet-dinov3l-k7.yaml',
+model='JiT-B/16',
+condition_mode_pixel='noised',
+noise_beta_dino_pixel=0.25,
+t_mean_pixel=-0.8,
+t_std_pixel=0.8,
+noise_scale_pixel=1.0,
+steps_pixel=50,
+sampling_method_pixel='heun',
+cfg_pixel=2.9,
+interval_min_pixel=0.1,
+interval_max_pixel=1.0,
+dist_timeout=60,
+num_images=50000,
+gen_bsz=256,
+eval_freq=20,
+online_eval=True,
+evaluate_gen=False,
+checkpoint='',
+init_pixel='',
+init_pixel_weights='model',
+training_stage='pixel',
+latent_spec={'encoder': 'dinov3l-k7',
+'stats_sha256': '40e57d9d38a267dc258043c081094d276382c29ebccc1bd8c38f4dd11e81ba77',
+'normalization': 'raev2_multilayer_mean_plus_global_zscore_eps1e-5'},
+rank=0,
+gpu=0,
+distributed=True,
+dist_backend='nccl')
+[12:59:05.575809] Trainable parameters: 132.698880M, global batch: 1024, LR: 2.00e-04
+tcsetattr: Input/output error
+tcsetattr: Input/output error
+GPU keepalive started with pid 219263
+Log: /root/.local/share/gpu-keepalive/keepalive.log

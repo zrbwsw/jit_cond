@@ -1,0 +1,134 @@
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+| distributed init (rank 0): env://, gpu 0
+| distributed init (rank 2): env://, gpu 2
+[rank2]:[W1126 04:26:40.574983204 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 2]  using GPU 2 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 7): env://, gpu 7
+| distributed init (rank 4): env://, gpu 4
+[rank7]:[W1126 04:26:40.595003371 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 7]  using GPU 7 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 6): env://, gpu 6
+[rank4]:[W1126 04:26:40.599972036 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 4]  using GPU 4 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[rank0]:[W1126 04:26:40.604114688 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[rank6]:[W1126 04:26:40.604274269 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 6]  using GPU 6 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 5): env://, gpu 5
+| distributed init (rank 3): env://, gpu 3
+[rank5]:[W1126 04:26:40.608485995 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 5]  using GPU 5 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[rank3]:[W1126 04:26:40.610380491 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 3]  using GPU 3 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 1): env://, gpu 1
+[rank1]:[W1126 04:26:40.617065216 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[04:26:43.233638] Arguments:
+Namespace(img_size=256,
+class_num=1000,
+attn_dropout=0.0,
+proj_dropout=0.0,
+t_eps=0.05,
+label_drop_prob=0.1,
+epochs=200,
+warmup_epochs=5,
+batch_size=128,
+lr=None,
+blr=5e-05,
+min_lr=0.0,
+lr_schedule='constant',
+weight_decay=0.0,
+ema_decay1=0.9999,
+ema_decay2=0.9996,
+seed=0,
+start_epoch=0,
+num_workers=12,
+pin_mem=True,
+data_path='/mnt/shared-storage-user/datafactory-share/gushishen/imagenet',
+output_dir='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122/checkpoints/stage1-dinov3b-dinodit-b-e160-stage2-pixeljit-b-dinodit-pred-e200/eval_checkpoint-160_realtrain50_pred_0.75_jitcfg2.9_heun50_image50000_selectseed0',
+resume='',
+save_last_freq=5,
+save_interval=80,
+log_freq=100,
+device='cuda',
+world_size=8,
+local_rank=-1,
+dist_on_itp=False,
+dist_url='env://',
+grounding_dim=768,
+dino_model='DinoDiT-B',
+dino_encoder='dinov3b',
+dinov3_weights='',
+dinov3_repo='',
+dino_stat_path='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/JiT_cond_join_dino/stat/dinov3b_rae_imagenet1k_stats.pt',
+t_mean_dino=-1.2,
+t_std_dino=1.0,
+noise_scale_dino=1.0,
+steps_dino=25,
+sampling_method_dino='heun',
+cfg_dino=1.0,
+interval_min_dino=0.0,
+interval_max_dino=1.0,
+model='JiT-B/16',
+condition_mode_pixel='pred',
+noise_beta_dino_pixel=0.25,
+t_schedule_dino_pixel='uniform',
+t_mean_pixel=-0.8,
+t_std_pixel=0.8,
+noise_scale_pixel=1.0,
+dino_checkpoint='',
+dino_weights='ema1',
+init_pixel='',
+init_pixel_weights='model',
+steps_pixel=50,
+sampling_method_pixel='heun',
+cfg_pixel=2.9,
+interval_min_pixel=0.1,
+interval_max_pixel=1.0,
+num_images=50000,
+gen_bsz=256,
+eval_freq=20,
+online_eval=False,
+evaluate_gen=True,
+checkpoint='/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122/checkpoints/stage1-dinov3b-dinodit-b-e160-stage2-pixeljit-b-dinodit-pred-e200/checkpoint-160.pth',
+grounding_split='train',
+grounding_per_class=50,
+grounding_selection_seed=0,
+fixed_t_dino_pixel=0.75,
+keep_images=False,
+skip_metrics=False,
+training_stage='pixel',
+latent_spec={'encoder': 'dinov3b',
+'stats_sha256': 'ab39f42ddbe63a328a6a35c30fb9941f72ff891e5543abd2580510c164c0129b',
+'normalization': 'no_affine_mean_var_eps1e-5_no_extra_scale'},
+rank=0,
+gpu=0,
+distributed=True,
+dist_backend='nccl')
+[04:26:56.113532] Grounding selection manifest: /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122/checkpoints/stage1-dinov3b-dinodit-b-e160-stage2-pixeljit-b-dinodit-pred-e200/eval_checkpoint-160_realtrain50_pred_0.75_jitcfg2.9_heun50_image50000_selectseed0/grounding_selection.json
+[04:26:56.113671] Grounding: real train images with training-matched noise; fixed t_dino_pixel=0.75, noise_scale=1.0; DinoDiT one-step prediction
+[04:26:56.113680] Grounding selection: per_class=50, seed=0
+[04:26:56.113687] Loaded Pixel checkpoint: /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122/checkpoints/stage1-dinov3b-dinodit-b-e160-stage2-pixeljit-b-dinodit-pred-e200/checkpoint-160.pth; epoch=160
+[04:26:56.142502] Save to: /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/jit_cond_dino_two_stage_1122/checkpoints/stage1-dinov3b-dinodit-b-e160-stage2-pixeljit-b-dinodit-pred-e200/eval_checkpoint-160_realtrain50_pred_0.75_jitcfg2.9_heun50_image50000_selectseed0/epoch160-dinorealtrain-pred-0.75-steps1-cfg1.0-interval0.0-0.0_pixelheun-steps50-cfg2.9-interval0.1-1.0-image50000-res256
+[04:26:56.143214] Generation step 0/25
+[04:27:15.927798] Generation step 1/25
+[04:27:32.034654] Generation step 2/25
+[04:27:49.307748] Generation step 3/25
+[04:28:06.042766] Generation step 4/25
+[04:28:22.629125] Generation step 5/25
+[04:28:38.917071] Generation step 6/25
+[04:28:55.653897] Generation step 7/25
+[04:29:12.763105] Generation step 8/25
+[04:29:29.809400] Generation step 9/25
+[04:29:46.612590] Generation step 10/25
+[04:30:03.243214] Generation step 11/25
+[04:30:20.085442] Generation step 12/25
+[04:30:37.167694] Generation step 13/25
+[04:30:54.143111] Generation step 14/25
+[04:31:10.934711] Generation step 15/25
+[04:31:27.963684] Generation step 16/25
+[04:31:44.473143] Generation step 17/25
+[04:32:01.199885] Generation step 18/25
+[04:32:17.751343] Generation step 19/25
+[04:32:34.226654] Generation step 20/25
+[04:32:50.727678] Generation step 21/25
+[04:33:07.231621] Generation step 22/25
+[04:33:24.189551] Generation step 23/25
+[04:33:41.246842] Generation step 24/25
+[04:34:45.565849] FID: 2.3926, Inception Score: 264.1083
+[rank0]:[W1126 04:34:54.432186369 ProcessGroupNCCL.cpp:1476] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
