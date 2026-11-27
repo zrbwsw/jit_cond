@@ -1,4 +1,4 @@
-"""PixelDiT2 RGB flow matching with clean RAEv2 features and a DINOv2 REPA teacher."""
+"""PixelDiT2 flow matching with clean, noised, or DDT-predicted grounding and REPA."""
 import torch
 from torch import nn
 
@@ -21,8 +21,11 @@ class Denoiser(nn.Module):
             raise ValueError("PixelDiT2-H/16 requires 256×256 input images")
         self.img_size = args.img_size
         self.num_classes = args.class_num
+        self.condition_mode_pixel = args.condition_mode_pixel
+        self.noise_beta_dino_pixel = args.noise_beta_dino_pixel
         self.net = PixelDiT2(num_classes=args.class_num, attn_dropout=args.attn_dropout,
-                             proj_dropout=args.proj_dropout)
+                             proj_dropout=args.proj_dropout,
+                             use_t_dino=self.condition_mode_pixel != "clean")
         self.repa_projection = build_repa_projection().requires_grad_(args.repa_weight > 0)
         self.repa_weight = args.repa_weight
         self.repa_align_layer = args.repa_align_layer
@@ -58,13 +61,27 @@ class Denoiser(nn.Module):
                 encoder.eval()
         return self
 
+    @torch.no_grad()
+    def prepare_grounding_pixel(self, clean, labels):
+        latent = self.dino_encoder.encode(clean)
+        if self.condition_mode_pixel == "clean":
+            return latent_to_tokens(latent), None, None
+        t_d_p = 1 - self.noise_beta_dino_pixel + self.noise_beta_dino_pixel * torch.rand(
+            clean.size(0), device=clean.device)
+        t_cond = t_d_p.view(-1, 1, 1, 1)
+        latent = t_cond * latent + (1 - t_cond) * torch.randn_like(latent)
+        if self.condition_mode_pixel == "pred":
+            latent = self._get_raev2_sampler(clean.device).predict_clean(latent, t_d_p, labels)
+            t_tag = torch.ones_like(t_d_p)
+        else:
+            t_tag = t_d_p
+        return latent_to_tokens(latent), t_tag, t_d_p
+
     def forward(self, x, labels):
         if self.dino_encoder is None:
             raise RuntimeError("Training requires the clean DINOv3 grounding encoder")
-        # JiT's loader supplies the same clean crop to both teachers, in [-1,1].
-        with torch.no_grad():
-            clean = (x + 1.0) * 0.5
-            grounding = latent_to_tokens(self.dino_encoder.encode(clean))
+        clean = (x + 1.0) * 0.5
+        grounding, t_dino, t_d_p = self.prepare_grounding_pixel(clean, labels)
         if self.training:
             class_drop = torch.rand(labels.shape, device=labels.device) < self.label_drop_prob
             labels = torch.where(class_drop, self.num_classes, labels)
@@ -73,32 +90,41 @@ class Denoiser(nn.Module):
         noise = torch.randn_like(x) * self.noise_scale_pixel
         x_t = t * x + (1 - t) * noise
         if self.repa_encoder is None:
-            prediction = self.net(x_t, t.flatten(), labels, grounding_tokens=grounding)
+            prediction = self.net(x_t, t.flatten(), labels, grounding_tokens=grounding, t_dino=t_dino)
         else:
             prediction, features = self.net(x_t, t.flatten(), labels, grounding_tokens=grounding,
-                                            repa_align_layer=self.repa_align_layer)
+                                            repa_align_layer=self.repa_align_layer, t_dino=t_dino)
         scale = (1 - t).clamp_min(self.t_eps)
         velocity = (x - x_t) / scale
         velocity_pred = (prediction - x_t) / scale
         fm_loss = (velocity - velocity_pred).square().mean(dim=(1, 2, 3)).mean()
+        metrics = {"fm_loss": fm_loss.item()}
+        if t_d_p is not None:
+            metrics["t_d_p"] = t_d_p.mean().item()
         if self.repa_encoder is None:
-            return fm_loss, {"fm_loss": fm_loss.item()}
+            return fm_loss, metrics
         with torch.no_grad():
             target = self.repa_encoder(clean, self.net.patch_size)
         cos_loss = repa_cosine_loss(self.repa_projection(features), target)
-        return fm_loss + self.repa_weight * cos_loss, {"fm_loss": fm_loss.item(), "cos_loss": cos_loss.item()}
+        metrics["cos_loss"] = cos_loss.item()
+        return fm_loss + self.repa_weight * cos_loss, metrics
 
     def release_latent_sampler(self):
         self.raev2_sampler = None
 
-    @torch.no_grad()
-    def generate(self, labels):
+    def _get_raev2_sampler(self, device):
         if self.raev2_sampler is None:
             from raev2_latent_sampler import RAEv2LatentSampler
             self.raev2_sampler = RAEv2LatentSampler(
-                self.raev2_checkpoint, self.raev2_config, labels.device,
+                self.raev2_checkpoint, self.raev2_config, device,
                 root=self.raev2_root, stat_path=self.dino_stat_path)
-        grounding = latent_to_tokens(self.raev2_sampler.sample_dino_latent(labels))
+        return self.raev2_sampler
+
+    @torch.no_grad()
+    def generate(self, labels):
+        grounding = latent_to_tokens(self._get_raev2_sampler(labels.device).sample_dino_latent(labels))
+        grounding_t_dino = (torch.ones(len(labels), device=labels.device)
+                            if self.condition_mode_pixel != "clean" else None)
         x = self.noise_scale_pixel * torch.randn(len(labels), 3, self.img_size, self.img_size,
                                                  device=labels.device)
         ts = torch.linspace(0.0, 1.0, self.steps_pixel + 1, device=x.device, dtype=x.dtype)
@@ -107,16 +133,19 @@ class Denoiser(nn.Module):
         for i in range(self.steps_pixel):
             t, t_next = ts[i], ts[i + 1]
             dt = t_next - t
-            v = self._velocity(x, t, labels, null_labels, grounding)
+            v = self._velocity(x, t, labels, null_labels, grounding, grounding_t_dino)
             x_euler = x + dt * v
             if i == self.steps_pixel - 1:
                 return x_euler
-            v_next = self._velocity(x_euler, t_next, labels, null_labels, grounding)
+            v_next = self._velocity(x_euler, t_next, labels, null_labels, grounding, grounding_t_dino)
             x = x + dt * 0.5 * (v + v_next)
 
-    def _velocity(self, x, t, labels, null_labels, grounding):
+    def _velocity(self, x, t, labels, null_labels, grounding, t_dino=None):
         scale = (1 - t).clamp_min(self.t_eps)
-        v_cond = (self.net(x, t.flatten(), labels, grounding_tokens=grounding) - x) / scale
+        condition_kwargs = {"grounding_tokens": grounding}
+        if t_dino is not None:
+            condition_kwargs["t_dino"] = t_dino
+        v_cond = (self.net(x, t.flatten(), labels, **condition_kwargs) - x) / scale
         v_null = (self.net(x, t.flatten(), null_labels, skip_grounding=True) - x) / scale
         low, high = self.cfg_interval_pixel
         inside = (t < high) & ((t > low) | (low <= 0))

@@ -13,6 +13,7 @@ def test_h16_shape_and_context_boundary():
     assert (net.hidden_size, net.num_heads, net.depth) == (1280, 16, 32)
     assert (net.patch_size, net.in_context_start, net.in_context_len) == (16, 8, 32)
     assert net.grounding_proj.weight.shape == (1280, 1024)
+    assert net.t_dino_embedder is None
 
 
 def test_patch_condition_and_repa_features():
@@ -44,3 +45,19 @@ def test_patch_condition_and_repa_features():
             handle.remove()
     with pytest.raises(ValueError, match="grounding_tokens"):
         net(x, t, y, tokens[:, :-1])
+
+
+def test_noised_condition_includes_dino_time():
+    torch.manual_seed(10)
+    net = PixelDiT2(hidden_size=16, num_heads=2, depth=2, in_context_start=1, use_t_dino=True)
+    tokens = torch.randn(1, 256, 1024)
+    t = torch.tensor([0.25])
+    t_dino = torch.tensor([0.8])
+    y = torch.tensor([42])
+    time, label = net.t_embedder(t), net.y_embedder(y).view(1, 1, -1)
+    expected = F.linear(tokens, net.grounding_proj.weight, net.grounding_proj.bias)
+    expected = expected + time[:, None] + label + net.t_dino_embedder(t_dino)[:, None]
+    expected = F.silu(expected)
+    torch.testing.assert_close(net._grounded_condition(tokens, time, label, t_dino), expected)
+    with pytest.raises(ValueError, match='t_dino'):
+        net._grounded_condition(tokens, time, label)

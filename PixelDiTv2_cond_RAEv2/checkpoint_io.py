@@ -7,10 +7,10 @@ import torch
 
 
 FORMAT = "PixelDiTv2_cond_RAEv2/v1"
-ARCH_FIELDS = ("model", "img_size", "class_num")
+ARCH_FIELDS = ("model", "img_size", "class_num", "condition_mode_pixel")
 TRAIN_FIELDS = ("attn_dropout", "proj_dropout", "label_drop_prob", "t_mean_pixel",
                 "t_std_pixel", "t_eps", "noise_scale_pixel", "ema_decay", "repa_weight",
-                "repa_align_layer")
+                "repa_align_layer", "noise_beta_dino_pixel")
 
 
 def latent_spec(args):
@@ -61,8 +61,10 @@ def resume_model(model, optimizer, checkpoint, args):
     if checkpoint.get("latent_spec") != latent_spec(args):
         raise ValueError("DINOv3-L k=7 latent statistics differ from the Pixel checkpoint")
     fields = ARCH_FIELDS if optimizer is None else ARCH_FIELDS + TRAIN_FIELDS
+    legacy_defaults = {"condition_mode_pixel": "clean", "noise_beta_dino_pixel": 0.25}
     for field in fields:
-        if checkpoint["args"][field] != getattr(args, field):
+        saved_value = checkpoint["args"].get(field, legacy_defaults.get(field))
+        if saved_value != getattr(args, field):
             raise ValueError(f"Checkpoint {field} differs from the requested configuration")
     model.net.load_state_dict(checkpoint["model"], strict=True)
     model.repa_projection.load_state_dict(checkpoint["repa_projection"], strict=True)

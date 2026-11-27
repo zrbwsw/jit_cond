@@ -130,7 +130,10 @@ def _evaluate_ema(model_without_ddp, args, epoch, batch_size, log_writer):
         log_writer.add_scalar('fid{}'.format(postfix), fid, epoch)
         log_writer.add_scalar('is{}'.format(postfix), inception_score, epoch)
         print("FID: {:.4f}, Inception Score: {:.4f}".format(fid, inception_score))
-        shutil.rmtree(save_folder)
+        if getattr(args, "keep_images", False):
+            print(f"Generated images saved to: {save_folder}")
+        else:
+            shutil.rmtree(save_folder)
 
     if misc.is_dist_avail_and_initialized():
         torch.distributed.barrier()

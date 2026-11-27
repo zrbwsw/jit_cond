@@ -35,6 +35,8 @@ def get_args_parser():
 
     # Pixel JiT 参数
     parser.add_argument('--model', default='JiT-B/16')
+    parser.add_argument('--condition_mode_pixel', choices=['clean', 'noised', 'pred'], default='clean')
+    parser.add_argument('--noise_beta_dino_pixel', default=0.25, type=float)
     parser.add_argument('--t_mean_pixel', '--P_mean', default=-0.8, type=float)
     parser.add_argument('--t_std_pixel', '--P_std', default=0.8, type=float)
     parser.add_argument('--noise_scale_pixel', default=1.0, type=float)
@@ -72,6 +74,8 @@ def validate_args(args):
 
     if min(args.noise_scale_pixel, args.steps_pixel, args.eval_freq, args.gen_bsz, args.num_images) <= 0:
         raise ValueError('Pixel noise scale, sampling steps, evaluation frequency and sample sizes must be positive')
+    if not 0 < args.noise_beta_dino_pixel <= 1:
+        raise ValueError('noise_beta_dino_pixel must be in (0, 1]')
 
     if args.checkpoint and not args.evaluate_gen:
         raise ValueError('--checkpoint is for sampling; use --resume to continue training')
@@ -81,7 +85,8 @@ def validate_args(args):
         raise ValueError('Resume uses weights from checkpoint; cannot also set --init_pixel')
     elif args.evaluate_gen and not checkpoint_path:
         raise ValueError('--evaluate_gen requires --checkpoint or --resume')
-    if (args.online_eval or args.evaluate_gen) and (not args.raev2_checkpoint or not args.raev2_config):
+    if ((args.online_eval or args.evaluate_gen or args.condition_mode_pixel == 'pred')
+            and (not args.raev2_checkpoint or not args.raev2_config)):
         raise ValueError('RAEv2 sampling requires --raev2_checkpoint and --raev2_config')
 
     return checkpoint_path
@@ -99,7 +104,8 @@ def main(args):
         else:
             # 新训练：使用 RAEv2 dinov3l-k7
             pixel_size = args.model.removeprefix('JiT-').split('/', 1)[0].lower()
-            name = f'stage1-raev2-dinov3l-k7-stage2-pixeljit-{pixel_size}-e{args.epochs}'
+            condition_suffix = '' if args.condition_mode_pixel == 'clean' else f'-{args.condition_mode_pixel}'
+            name = f'stage1-raev2-dinov3l-k7-stage2-pixeljit-{pixel_size}{condition_suffix}-e{args.epochs}'
             folder = Path('checkpoints') / name
         args.output_dir = str(folder)
 

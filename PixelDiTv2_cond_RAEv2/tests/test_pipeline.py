@@ -78,6 +78,8 @@ def test_trainable_params_loss_and_resume(pipeline, tmp_path):
     restored = denoiser.Denoiser(args)
     restored_opt = torch.optim.AdamW((p for p in restored.parameters() if p.requires_grad))
     raw = checkpoint_io.read_checkpoint(path)
+    raw["args"].pop("condition_mode_pixel")
+    raw["args"].pop("noise_beta_dino_pixel")
     checkpoint_io.resume_model(restored, restored_opt, raw, args)
     assert args.start_epoch == 7
     assert restored_opt.state_dict()['state'].keys() == opt.state_dict()['state'].keys()
@@ -147,9 +149,108 @@ def test_pixel_cfg_interval_and_velocity_scale(pipeline):
 def test_release_configuration():
     args = get_args_parser().parse_args([])
     assert (args.model, args.img_size, args.epochs) == ('PixelDiT2-H/16', 256, 160)
+    assert (args.condition_mode_pixel, args.noise_beta_dino_pixel) == ('clean', 0.25)
     assert (args.label_drop_prob, args.attn_dropout, args.proj_dropout) == (0.1, 0.0, 0.2)
     assert (args.repa_align_layer, args.repa_weight) == (8, 0.5)
     assert (args.t_mean_pixel, args.t_std_pixel, args.noise_scale_pixel, args.t_eps) == (-0.8, 0.8, 1.0, 0.05)
     assert (args.steps_pixel, args.cfg_pixel, args.interval_min_pixel, args.interval_max_pixel) == (50, 2.4, 0.125, 0.9)
     assert args.lr == 2e-4 and args.warmup_steps == 6255 and args.ema_decay == 0.9999
     assert (args.batch_size, args.accum_steps) == (128, 1)
+
+
+def test_noised_grounding_matches_time_interpolation(pipeline):
+    args = pipeline
+    args.condition_mode_pixel = 'noised'
+    model = denoiser.Denoiser(args).train()
+    images = torch.linspace(-1, 1, 3 * 256 * 256).reshape(1, 3, 256, 256)
+    clean = (images + 1) / 2
+    clean_latent = model.dino_encoder.encode(clean)
+    torch.manual_seed(123)
+    tokens, t_dino, t_d_p = model.prepare_grounding_pixel(clean, torch.tensor([13]))
+    torch.manual_seed(123)
+    expected_t = 0.75 + 0.25 * torch.rand(1)
+    expected = expected_t.view(-1, 1, 1, 1) * clean_latent
+    expected = expected + (1 - expected_t.view(-1, 1, 1, 1)) * torch.randn_like(clean_latent)
+    torch.testing.assert_close(t_dino, expected_t)
+    torch.testing.assert_close(t_d_p, expected_t)
+    torch.testing.assert_close(tokens, denoiser.latent_to_tokens(expected))
+    loss, metrics = model(images, torch.tensor([13]))
+    assert 0.75 <= metrics['t_d_p'] < 1
+    loss.backward()
+    assert model.net.t_dino_embedder.mlp[0].weight.grad is not None
+
+
+@pytest.mark.parametrize('mode', ['noised', 'pred'])
+def test_noised_generation_uses_clean_time_tag(pipeline, mode):
+    args = pipeline
+    args.condition_mode_pixel = mode
+    args.evaluate_gen = True
+    model = denoiser.Denoiser(args).eval()
+    model.steps_pixel = 1
+    model.raev2_sampler = type('Sampler', (), {
+        'sample_dino_latent': lambda self, labels: torch.ones(len(labels), 1024, 16, 16),
+    })()
+    labels = torch.tensor([13])
+    calls = []
+    hook = model.net.register_forward_pre_hook(
+        lambda m, inputs, kwargs: calls.append(kwargs), with_kwargs=True)
+    try:
+        model.generate(labels)
+    finally:
+        hook.remove()
+    assert len(calls) == 2
+    torch.testing.assert_close(calls[0]['t_dino'], torch.ones(1))
+    assert 't_dino' not in calls[1] and calls[1]['skip_grounding']
+
+
+def test_pred_grounding_uses_teacher_prediction_and_clean_tag(pipeline):
+    args = pipeline
+    args.condition_mode_pixel = 'pred'
+    model = denoiser.Denoiser(args).train()
+    images = torch.linspace(-1, 1, 3 * 256 * 256).reshape(1, 3, 256, 256)
+    clean = (images + 1) / 2
+    clean_latent = model.dino_encoder.encode(clean)
+    labels = torch.tensor([13])
+
+    class Predictor:
+        def predict_clean(self, z_cond, t_dino, batch_labels):
+            torch.testing.assert_close(batch_labels, labels)
+            self.t_dino = t_dino
+            return z_cond * 0.5 + 0.25
+
+    model.raev2_sampler = Predictor()
+    torch.manual_seed(123)
+    tokens, t_tag, t_d_p = model.prepare_grounding_pixel(clean, labels)
+    torch.manual_seed(123)
+    expected_t = 0.75 + 0.25 * torch.rand(1)
+    expected = expected_t.view(-1, 1, 1, 1) * clean_latent
+    expected = expected + (1 - expected_t.view(-1, 1, 1, 1)) * torch.randn_like(clean_latent)
+    expected = expected * 0.5 + 0.25
+    torch.testing.assert_close(tokens, denoiser.latent_to_tokens(expected))
+    torch.testing.assert_close(t_tag, torch.ones_like(expected_t))
+    torch.testing.assert_close(t_d_p, expected_t)
+    torch.testing.assert_close(model.raev2_sampler.t_dino, expected_t)
+
+
+def test_raev2_predict_clean_uses_complementary_time_and_full_output():
+    from raev2_latent_sampler import RAEv2LatentSampler
+
+    sampler = RAEv2LatentSampler.__new__(RAEv2LatentSampler)
+    sampler.device = torch.device("cpu")
+    sampler.latent_size = (1024, 16, 16)
+
+    class Model(nn.Module):
+        def forward(self, x, t, **kwargs):
+            self.t = t
+            self.kwargs = kwargs
+            return x + 1, x - 1
+
+    sampler.model = Model()
+    z_cond = torch.randn(2, 1024, 16, 16)
+    t_dino = torch.tensor([0.75, 0.9])
+    labels = torch.tensor([3, 4])
+    prediction = sampler.predict_clean(z_cond, t_dino, labels)
+    torch.testing.assert_close(prediction, z_cond + 1)
+    torch.testing.assert_close(sampler.model.t, 1 - t_dino)
+    torch.testing.assert_close(sampler.model.kwargs["context"], labels)
+    assert sampler.model.kwargs["attn_mask"] is None

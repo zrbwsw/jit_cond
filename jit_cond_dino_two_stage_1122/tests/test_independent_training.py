@@ -152,6 +152,124 @@ def test_real_grounding_evaluation_bypasses_dino_and_preserves_noise(args, mode)
     assert provider.calls[-1][1].tolist() == [0, 1]
 
 
+def test_train_grounding_selection_is_balanced_and_reproducible(tmp_path):
+    from grounding_evaluation import ValGroundingProvider
+
+    for class_name in ('n00000001', 'n00000002'):
+        class_dir = tmp_path / 'train' / class_name
+        class_dir.mkdir(parents=True)
+        for index in range(8):
+            (class_dir / f'{index}.JPEG').touch()
+
+    provider = ValGroundingProvider(tmp_path, 32, 2, 'train', per_class=3, selection_seed=11)
+    repeated = ValGroundingProvider(tmp_path, 32, 2, 'train', per_class=3, selection_seed=11)
+    different = ValGroundingProvider(tmp_path, 32, 2, 'train', per_class=3, selection_seed=12)
+    assert provider.files == repeated.files
+    assert provider.files != different.files
+    assert all(len(files) == 3 for files in provider.files)
+    assert all(files == sorted(files) for files in provider.files)
+    assert provider.selection_record()['per_class'] == 3
+    assert provider.selection_record()['selection_seed'] == 11
+
+
+def test_noised_real_grounding_matches_training(args):
+    from noised_grounding_evaluation import NoisedRealGroundingSampler, generate_noised_grounding
+
+    args.condition_mode_pixel = 'noised'
+
+    class Provider:
+        num_classes = args.class_num
+
+        def load_batch(self, labels, intra_indices):
+            return torch.ones(len(labels), 3, 32, 32)
+
+    model = denoiser.Denoiser(args).eval()
+    model.steps_pixel = 1
+    sampler = NoisedRealGroundingSampler(model, Provider(), num_images=8, batch_size=3)
+    labels = torch.tensor([0, 0, 1])
+    torch.manual_seed(11)
+    z_cond, t_dino_pixel = sampler(labels)
+    torch.manual_seed(11)
+    expected_t = .75 + .25 * torch.rand(len(labels))
+    clean = model.encode_grounding(torch.ones(len(labels), 3, 32, 32))
+    expected_z = expected_t.view(-1, 1, 1, 1) * clean
+    expected_z += (1 - expected_t.view(-1, 1, 1, 1)) * torch.randn_like(clean)
+    torch.testing.assert_close(t_dino_pixel, expected_t)
+    torch.testing.assert_close(z_cond, expected_z)
+
+    torch.manual_seed(23)
+    expected_z, expected_t = sampler(labels)
+    model.net.calls.clear()
+    torch.manual_seed(23)
+    images = generate_noised_grounding(model, sampler, model.generate, labels)
+    assert images.shape == (3, 3, 32, 32)
+    assert len(model.net.calls) == 2
+    for tokens, _, t_tag in model.net.calls:
+        torch.testing.assert_close(tokens, model._as_tokens(expected_z))
+        torch.testing.assert_close(t_tag, expected_t)
+    assert not model.dino_net.calls
+
+
+def test_fixed_noised_real_grounding(args):
+    from noised_grounding_evaluation import NoisedRealGroundingSampler
+
+    args.condition_mode_pixel = 'noised'
+
+    class Provider:
+        num_classes = args.class_num
+
+        def load_batch(self, labels, intra_indices):
+            return torch.ones(len(labels), 3, 32, 32)
+
+    model = denoiser.Denoiser(args).eval()
+    sampler = NoisedRealGroundingSampler(
+        model, Provider(), num_images=8, batch_size=3, fixed_t_dino_pixel=.75)
+    labels = torch.tensor([0, 0, 1])
+    torch.manual_seed(5)
+    z_cond, t_dino_pixel = sampler(labels)
+    torch.manual_seed(5)
+    clean = model.encode_grounding(torch.ones(len(labels), 3, 32, 32))
+    expected_z = .75 * clean + .25 * torch.randn_like(clean)
+    torch.testing.assert_close(t_dino_pixel, torch.full_like(t_dino_pixel, .75))
+    torch.testing.assert_close(z_cond, expected_z)
+
+
+def test_pred_real_grounding_matches_training(args):
+    from noised_grounding_evaluation import NoisedRealGroundingSampler, generate_noised_grounding
+
+    args.condition_mode_pixel = 'pred'
+
+    class Provider:
+        num_classes = args.class_num
+
+        def load_batch(self, labels, intra_indices):
+            return torch.ones(len(labels), 3, 32, 32)
+
+    model = denoiser.Denoiser(args).eval()
+    model.steps_pixel = 1
+    sampler = NoisedRealGroundingSampler(
+        model, Provider(), num_images=8, batch_size=3, fixed_t_dino_pixel=.75)
+    labels = torch.tensor([0, 0, 1])
+    torch.manual_seed(9)
+    z_cond, t_tag = sampler(labels)
+    torch.manual_seed(9)
+    clean = model.encode_grounding(torch.ones(len(labels), 3, 32, 32))
+    noised = .75 * clean + .25 * torch.randn_like(clean)
+    expected_z = model.dino_net(noised, torch.full_like(t_tag, .75), labels)
+    torch.testing.assert_close(z_cond, expected_z)
+    torch.testing.assert_close(t_tag, torch.ones_like(t_tag))
+
+    torch.manual_seed(10)
+    expected_z, _ = sampler(labels)
+    model.net.calls.clear()
+    torch.manual_seed(10)
+    generate_noised_grounding(model, sampler, model.generate, labels)
+    assert len(model.net.calls) == 2
+    for tokens, _, t_tag in model.net.calls:
+        torch.testing.assert_close(tokens, model._as_tokens(expected_z))
+        torch.testing.assert_close(t_tag, torch.ones_like(t_tag))
+
+
 def test_label_dropout_masks_pixel_not_teacher(args):
     args.label_drop_prob = 1.0
     model = denoiser.Denoiser(args)
@@ -351,6 +469,30 @@ def test_evaluate_restores_pixel_and_never_changes_teacher(args):
     assert model.training and model.net.training and not model.dino_net.training
     for name, value in before.items():
         torch.testing.assert_close(value, model.state_dict()[name])
+
+
+def test_evaluate_keep_images(args, monkeypatch):
+    import engine_jit
+
+    model = denoiser.Denoiser(args)
+    initialize_ema(model)
+    args.num_images = 4
+    args.keep_images = True
+
+    class LogWriter:
+        def add_scalar(self, *args):
+            pass
+
+    monkeypatch.setattr(engine_jit.torch_fidelity, 'calculate_metrics', lambda **kwargs: {
+        'frechet_inception_distance': 1.0,
+        'inception_score_mean': 2.0,
+    })
+    monkeypatch.setattr(engine_jit, '_cache_local_inception_weights', lambda path: None)
+    monkeypatch.setattr(engine_jit, 'fid_stats_path', lambda size: 'unused')
+    monkeypatch.setattr(engine_jit.shutil, 'rmtree', lambda path: (_ for _ in ()).throw(
+        AssertionError('keep_images must not delete generated images')))
+    engine_jit.evaluate(model, args, 1, batch_size=2, log_writer=LogWriter())
+    assert len(list(Path(args.output_dir).rglob('*.png'))) == 4
 
 
 @pytest.mark.parametrize('condition_mode', ['pred', 'noised'])

@@ -37,12 +37,15 @@ def validate_metadata(checkpoint, args, *, resume=False):
         fields += [
             "t_mean_pixel", "t_std_pixel", "noise_scale_pixel", "label_drop_prob",
             "ema_decay1", "ema_decay2", "attn_dropout", "proj_dropout",
+            "condition_mode_pixel", "noise_beta_dino_pixel",
         ]
+    legacy_defaults = {"condition_mode_pixel": "clean", "noise_beta_dino_pixel": 0.25}
     for key in fields:
-        if key not in saved:
+        if key not in saved and key not in legacy_defaults:
             raise ValueError(f"Checkpoint lacks {key} metadata")
-        if saved[key] != getattr(args, key):
-            raise ValueError(f"Checkpoint {key}={saved[key]!r}, requested {getattr(args, key)!r}")
+        saved_value = saved.get(key, legacy_defaults.get(key))
+        if saved_value != getattr(args, key):
+            raise ValueError(f"Checkpoint {key}={saved_value!r}, requested {getattr(args, key)!r}")
     if "latent_spec" in checkpoint and checkpoint["latent_spec"] != latent_spec(args):
         raise ValueError("DINOv3-L k7 latent statistics do not match the checkpoint")
 

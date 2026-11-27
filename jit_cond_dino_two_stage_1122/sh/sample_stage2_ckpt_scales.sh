@@ -5,6 +5,7 @@ GPU_HOST="${GPU_HOST:-agent-gpu-l2-1}"
 PYTHON_BIN="${PYTHON_BIN:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/envs/irepa-py310-cu126-20261015/bin/python}"
 DINO_STAT_PATH="${DINO_STAT_PATH:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/JiT_cond_join_dino/stat/dinov3b_rae_imagenet1k_stats.pt}"
 DINO_CFG="${DINO_CFG:-2.0}"
+DINO_STEPS="${DINO_STEPS:-25}"
 JIT_CFG_LIST="${JIT_CFG_LIST:-2.1 2.3 2.5}"
 if [[ -z "${CHECKPOINT:-}" ]]; then
     echo '必须设置 CHECKPOINT' >&2
@@ -18,7 +19,7 @@ if [[ $# -gt 1 || ( $# -eq 1 && "${1:-}" != --dry-run ) ]]; then
 fi
 
 for jit_cfg in $JIT_CFG_LIST; do
-    eval_dir="$EVAL_ROOT/eval_${CHECKPOINT_TAG}_jitcfg${jit_cfg}_dinocfg${DINO_CFG}_dino25_heun50_image50000"
+    eval_dir="$EVAL_ROOT/eval_${CHECKPOINT_TAG}_jitcfg${jit_cfg}_dinocfg${DINO_CFG}_dino${DINO_STEPS}_heun50_image50000"
     sampling_log="$eval_dir/sampling.log"
     if [[ "${1:-}" != --dry-run && -f "$sampling_log" ]] && "$PYTHON_BIN" -c \
         'import pathlib, sys; sys.exit(0 if "FID:" in pathlib.Path(sys.argv[1]).read_text(errors="replace") else 1)' \
@@ -30,7 +31,7 @@ for jit_cfg in $JIT_CFG_LIST; do
     args=(
         --checkpoint "$CHECKPOINT" --dino_encoder dinov3b --dino_stat_path "$DINO_STAT_PATH"
         --condition_mode_pixel "${CONDITION_MODE:-pred}"
-        --steps_dino 25 --steps_pixel 50 --sampling_method_dino heun --sampling_method_pixel heun
+        --steps_dino "$DINO_STEPS" --steps_pixel 50 --sampling_method_dino heun --sampling_method_pixel heun
         --cfg_dino "$DINO_CFG" --cfg_pixel "$jit_cfg"
         --interval_min_dino 0.0 --interval_max_dino 1.0
         --interval_min_pixel 0.1 --interval_max_pixel 1.0

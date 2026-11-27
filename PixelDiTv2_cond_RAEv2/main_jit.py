@@ -11,6 +11,8 @@ def get_args_parser():
     for key, default in asset_defaults().items():
         p.add_argument('--' + key, default=default)
     p.add_argument('--model', choices=['PixelDiT2-H/16'], default='PixelDiT2-H/16')
+    p.add_argument('--condition_mode_pixel', choices=['clean', 'noised', 'pred'], default='clean')
+    p.add_argument('--noise_beta_dino_pixel', default=0.25, type=float)
     p.add_argument('--img_size', choices=[256], default=256, type=int)
     p.add_argument('--class_num', choices=[1000], default=1000, type=int)
     p.add_argument('--attn_dropout', default=0., type=float)
@@ -69,6 +71,8 @@ def validate_args(args):
         raise ValueError('Worker count, warmup, REPA weight, time std and weight decay must be nonnegative')
     if not 0 <= args.ema_decay < 1 or not 0 < args.t_eps <= 1:
         raise ValueError('Require 0 <= ema_decay < 1 and 0 < t_eps <= 1')
+    if not 0 < args.noise_beta_dino_pixel <= 1:
+        raise ValueError('noise_beta_dino_pixel must be in (0, 1]')
     if not 0 <= args.interval_min_pixel <= args.interval_max_pixel <= 1:
         raise ValueError('Invalid Pixel CFG interval')
     if not 1 <= args.repa_align_layer <= 32:
@@ -86,7 +90,7 @@ def validate_args(args):
                          args.dino_encoder_weights_path])
         if args.repa_weight:
             required.append(args.repa_encoder_weights_path)
-    if args.online_eval or args.evaluate_gen:
+    if args.online_eval or args.evaluate_gen or args.condition_mode_pixel == 'pred':
         required.extend([args.raev2_checkpoint, args.raev2_config])
         if not args.samples_only:
             required.append(args.fid_stats)
@@ -111,7 +115,8 @@ def main(args):
         if checkpoint:
             out = checkpoint.parent / f'eval-{checkpoint.stem}' if args.evaluate_gen else checkpoint.parent
         else:
-            out = PROJECT_ROOT / 'checkpoints' / f'raev2-dinov3l-k7-pixeldit2-h16-e{args.epochs}'
+            condition_suffix = '' if args.condition_mode_pixel == 'clean' else f'-{args.condition_mode_pixel}'
+            out = PROJECT_ROOT / 'checkpoints' / f'raev2-dinov3l-k7-pixeldit2-h16{condition_suffix}-e{args.epochs}'
         args.output_dir = str(out)
     args.latent_spec = latent_spec(args)
     device = initialize_run(args)

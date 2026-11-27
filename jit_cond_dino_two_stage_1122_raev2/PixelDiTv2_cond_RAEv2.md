@@ -330,4 +330,8 @@ Pixel sampler 的步数、guidance、noise scale、`t_eps` 和最后一步 Euler
 - 不处理官方 PixelDiT2-H checkpoint 的部分加载；
 - 不包含 v1 PiT。
 
+## 12. 后续扩展：可选 noised grounding
+
+当前实现新增 `--condition_mode_pixel clean|noised|pred`，默认仍为 `clean`，因此本文前述 clean 方案保持不变。启用 `noised` 后，训练按 `t_dino_pixel ~ U[1-noise_beta_dino_pixel,1)` 对 clean latent 加噪，并在 Pixel condition 中加入对应的时间 embedding；采样时统一传入 `t_dino=1`。启用 `pred` 后，冻结的 RAEv2 DDT-XL 对 noised latent 做一次 clean x-prediction，Pixel 使用时间标记 1。这些可选项用于消融实验，不影响旧 clean checkpoint 的默认恢复方式。
+
 本文档仅描述目标实现方案，不表示 `PixelDiTv2_cond_RAEv2` 代码已经完成或通过上述验证。

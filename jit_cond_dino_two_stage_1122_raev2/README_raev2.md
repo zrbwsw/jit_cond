@@ -2,9 +2,13 @@
 
 ## 方法
 
-### 训练：真实图片 clean grounding
+### 训练：clean、noised 或 DDT-pred grounding
 
 冻结 RAEv2 DINOv3-L k=7 encoder，聚合第 `[11,13,15,17,19,21,23]` 层，计算七层均值并加上最后一层的空间均值，再用 `stats.pt` 做 z-score 归一化，输出 `[B,1024,16,16]`。Pixel JiT 使用这些 patch tokens 学习 RGB 流匹配损失。类别 dropout 同时屏蔽类别和 grounding。
+
+默认 `--condition_mode_pixel clean`，保持原有实验不变。设置 `--condition_mode_pixel noised` 后，按 `--noise_beta_dino_pixel`（默认 `0.25`）采样 `t_dino_pixel ~ U[0.75,1)`，并计算 `z_cond = t * clean + (1-t) * noise`。该模式会将实际 `t_dino_pixel` 加入 Pixel 条件；采样时统一传入 `1`。
+
+设置 `--condition_mode_pixel pred` 后，训练会将同样的 noised latent 交给冻结的 RAEv2 Stage 2 DDT-XL EMA，取 full branch 的单步 clean x-prediction，不使用 CFG/IG。RAEv2 使用 `x_t=(1-t)*clean+t*noise`，因此调用时传 `t_rae=1-t_dino_pixel`。Pixel 使用 `t_dino=1`，采样仍走官方完整 RAEv2 sampler。只有 pred 训练需要加载 DDT checkpoint 和配置。
 
 ### 在线评估和采样：RAEv2 EMA latent grounding
 
@@ -49,7 +53,7 @@ RESUME=$PWD/checkpoints/stage1-raev2-dinov3l-k7-stage2-pixeljit-b-e160/checkpoin
 ## 验证
 
 - `test_encoder.py`：真实 DINOv3-L k=7 前向，检查 `[2,1024,16,16]`。
-- `tests/test_independent_training.py`：clean grounding、dropout、CFG、EMA、checkpoint 和官方采样配置。
+- `tests/test_independent_training.py`：clean/noised grounding、dropout、CFG、EMA、checkpoint 和官方采样配置。
 - `raev2_latent_sampler.py`：已验证实际 EMA checkpoint 采样输出及有限性。
 
 当前没有该方法的训练结果，不预设 FID/IS。

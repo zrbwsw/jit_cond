@@ -3,7 +3,13 @@ set -euo pipefail
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 GPU_HOST="${GPU_HOST:-agent-gpu-l2-1}"
 EPOCHS="${EPOCHS:-160}"
-EXP_NAME="${EXP_NAME:-stage1-raev2-dinov3l-k7-stage2-pixeljit-b-e${EPOCHS}}"
+CONDITION_MODE="${CONDITION_MODE:-clean}"
+NOISE_BETA_DINO_PIXEL="${NOISE_BETA_DINO_PIXEL:-0.25}"
+CONDITION_SUFFIX=""
+if [[ "$CONDITION_MODE" != clean ]]; then
+    CONDITION_SUFFIX="-$CONDITION_MODE"
+fi
+EXP_NAME="${EXP_NAME:-stage1-raev2-dinov3l-k7-stage2-pixeljit-b${CONDITION_SUFFIX}-e${EPOCHS}}"
 PYTHON_BIN="${PYTHON_BIN:-/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/envs/irepa-py310-cu126-20261015/bin/python}"
 IMAGENET_ROOT="${IMAGENET_ROOT:-/mnt/shared-storage-user/datafactory-share/gushishen/imagenet}"
 DINO_STAT_PATH="${DINO_STAT_PATH:-$PROJECT_ROOT/stat/dinov3l_k7_imagenet1k_stats.pt}"
@@ -45,6 +51,7 @@ args=(
     --raev2_checkpoint "$RAEV2_CHECKPOINT"
     --raev2_config "$RAEV2_CONFIG"
     --model JiT-B/16
+    --condition_mode_pixel "$CONDITION_MODE" --noise_beta_dino_pixel "$NOISE_BETA_DINO_PIXEL"
     --epochs "$EPOCHS"
     --output_dir "$OUTPUT_DIR"
     --batch_size 128 --blr 5e-5 --warmup_epochs 5 --num_workers 12

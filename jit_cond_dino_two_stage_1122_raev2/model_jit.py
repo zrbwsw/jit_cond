@@ -441,8 +441,7 @@ class JiT(nn.Module):
         # patch token 投影。投影层是唯一新增的 JiT 可训练参数模块。
         # 保存 grounding 输入维度；维度: None 或标量 -> None/768。
         self.grounding_dim = grounding_dim
-        # 保留 join-dino 的参数结构以兼容旧权重；本版本预测 clean token，
-        # 训练与采样均令 Pixel 的 t_dino=1，实际加噪时间只送给 DinoDiT。
+        # clean 不启用；noised 传实际 t_dino，pred 和采样传 1。
         self.use_t_dino = bool(use_t_dino)
 
         # time and class embed

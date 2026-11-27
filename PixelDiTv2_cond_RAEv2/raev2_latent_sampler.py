@@ -78,6 +78,31 @@ class RAEv2LatentSampler:
             f"latent_size={self.latent_size}", flush=True)
 
     @torch.no_grad()
+    def predict_clean(self, z_cond, t_dino_pixel, labels):
+        expected = (len(labels), *self.latent_size)
+        if z_cond.shape != expected or t_dino_pixel.shape != (len(labels),):
+            raise ValueError("Unexpected noised latent or t_dino_pixel shape")
+        z_cond = z_cond.to(self.device)
+        labels = labels.to(self.device)
+        t_dino_pixel = t_dino_pixel.to(self.device)
+        # RAEv2 uses xt=(1-t)*clean+t*noise, while t_dino_pixel is the clean weight.
+        # z_cond is already constructed, so do not apply another time-dist shift.
+        rae_t = 1 - t_dino_pixel
+        with torch.amp.autocast(
+            device_type=self.device.type,
+            dtype=torch.bfloat16,
+            enabled=self.device.type == "cuda",
+        ):
+            prediction = self.model(z_cond, rae_t, context=labels, attn_mask=None)
+        if isinstance(prediction, tuple):
+            prediction = prediction[0]
+        if prediction.shape != expected:
+            raise ValueError(f"Unexpected RAEv2 prediction shape: {prediction.shape}")
+        if not prediction.isfinite().all():
+            raise ValueError("RAEv2 predictor produced non-finite latents")
+        return prediction
+
+    @torch.no_grad()
     def sample_dino_latent(self, labels):
         labels = labels.to(self.device)
         batch_size = len(labels)

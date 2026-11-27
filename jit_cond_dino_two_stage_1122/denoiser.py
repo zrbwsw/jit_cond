@@ -66,7 +66,7 @@ class Denoiser(DinoLatentModel):
         return loss_pixel, {"loss_pixel": loss_pixel.item(), "t_d_p": t_d_p.mean().item()}
 
     @torch.no_grad()
-    def generate(self, labels, grounding_tokens=None):
+    def generate(self, labels, grounding_tokens=None, grounding_t_dino=None):
         if grounding_tokens is None:
             grounding_tokens = self._as_tokens(self.sample_dino_latent(labels))
         bsz = labels.size(0)
@@ -74,13 +74,19 @@ class Denoiser(DinoLatentModel):
         ts_p = torch.linspace(0., 1., self.steps_pixel + 1, device=labels.device)
         ts_p = ts_p.view(-1, 1, 1, 1, 1).expand(-1, bsz, -1, -1, -1)
         for i in range(self.steps_pixel - 1):
-            z_p = self._step_pixel(z_p, ts_p[i], ts_p[i + 1], labels, grounding_tokens, self.method_pixel == "heun")
-        return self._step_pixel(z_p, ts_p[-2], ts_p[-1], labels, grounding_tokens, heun=False)
+            z_p = self._step_pixel(z_p, ts_p[i], ts_p[i + 1], labels, grounding_tokens,
+                                   self.method_pixel == "heun", grounding_t_dino)
+        return self._step_pixel(z_p, ts_p[-2], ts_p[-1], labels, grounding_tokens,
+                                heun=False, grounding_t_dino=grounding_t_dino)
 
-    def _velocity_pixel(self, z_p, t_p, labels, grounding_tokens):
+    def _velocity_pixel(self, z_p, t_p, labels, grounding_tokens, grounding_t_dino=None):
         null_labels = torch.full_like(labels, self.num_classes)
-        # 两种训练模式采样时都使用已积分到 clean 端的 DINO latent。
-        t_tag = torch.ones_like(t_p.flatten())
+        if grounding_t_dino is None:
+            t_tag = torch.ones_like(t_p.flatten())
+        else:
+            t_tag = grounding_t_dino.to(device=z_p.device, dtype=z_p.dtype).flatten()
+            if t_tag.shape != (labels.size(0),):
+                raise ValueError(f"grounding_t_dino must have shape {(labels.size(0),)}, got {tuple(t_tag.shape)}")
         x_cond = self.net(z_p, t_p.flatten(), labels, grounding_tokens=grounding_tokens, t_dino=t_tag)
         x_uncond = self.net(z_p, t_p.flatten(), null_labels, grounding_tokens=grounding_tokens,
                             grounding_mask=False, t_dino=t_tag)
@@ -92,10 +98,10 @@ class Denoiser(DinoLatentModel):
         scale = torch.where(mask, self.cfg_pixel, 1.0)
         return v_uncond + scale * (v_cond - v_uncond)
 
-    def _step_pixel(self, z_p, t_p, t_p_next, labels, grounding_tokens, heun):
-        v = self._velocity_pixel(z_p, t_p, labels, grounding_tokens)
+    def _step_pixel(self, z_p, t_p, t_p_next, labels, grounding_tokens, heun, grounding_t_dino=None):
+        v = self._velocity_pixel(z_p, t_p, labels, grounding_tokens, grounding_t_dino)
         z_euler = z_p + (t_p_next - t_p) * v
         if not heun:
             return z_euler
-        v_next = self._velocity_pixel(z_euler, t_p_next, labels, grounding_tokens)
+        v_next = self._velocity_pixel(z_euler, t_p_next, labels, grounding_tokens, grounding_t_dino)
         return z_p + (t_p_next - t_p) * 0.5 * (v + v_next)

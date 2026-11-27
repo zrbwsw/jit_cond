@@ -1,5 +1,6 @@
-"""Evaluate Pixel JiT with clean validation-image DINO grounding."""
+"""Evaluate Pixel JiT with clean real-image DINO grounding."""
 import argparse
+import json
 from pathlib import Path
 
 import numpy as np
@@ -15,11 +16,15 @@ from util.training import initialize_run, make_log_writer
 
 
 class ValGroundingProvider:
-    def __init__(self, root, img_size, num_classes, split="val"):
+    def __init__(self, root, img_size, num_classes, split="val", per_class=None, selection_seed=0):
         self.root = Path(root)
         self.img_size = img_size
         self.num_classes = num_classes
         self.split = split
+        self.per_class = per_class
+        self.selection_seed = selection_seed
+        if per_class is not None and per_class < 1:
+            raise ValueError("grounding_per_class must be positive")
         split_dir = self.root / split
         if not split_dir.is_dir():
             raise FileNotFoundError(f"Grounding split not found: {split_dir}")
@@ -27,12 +32,26 @@ class ValGroundingProvider:
         if len(self.classes) != num_classes:
             raise ValueError(f"Found {len(self.classes)} classes in {split_dir}, expected {num_classes}")
         self.files = []
+        rng = np.random.default_rng(selection_seed)
         for name in self.classes:
             files = sorted(path.name for path in (split_dir / name).iterdir()
                            if path.suffix.lower() in {".jpeg", ".jpg", ".png", ".bmp", ".webp"})
             if not files:
                 raise FileNotFoundError(f"No grounding images in {split_dir / name}")
+            if per_class is not None:
+                if len(files) < per_class:
+                    raise ValueError(f"Found {len(files)} images in {split_dir / name}, need {per_class}")
+                indices = rng.choice(len(files), size=per_class, replace=False)
+                files = sorted(files[index] for index in indices)
             self.files.append(files)
+
+    def selection_record(self):
+        return {
+            "split": self.split,
+            "per_class": self.per_class if self.per_class is not None else len(self.files[0]),
+            "selection_seed": self.selection_seed if self.per_class is not None else None,
+            "files": dict(zip(self.classes, self.files)),
+        }
 
     def load_batch(self, labels, intra_indices):
         images = []
@@ -87,18 +106,27 @@ def main(args):
     resume_model(model, None, read_checkpoint(checkpoint_path), args)
     model.eval()
 
-    provider = ValGroundingProvider(args.data_path, args.img_size, args.class_num, args.grounding_split)
+    provider = ValGroundingProvider(
+        args.data_path, args.img_size, args.class_num, args.grounding_split,
+        per_class=args.grounding_per_class, selection_seed=args.grounding_selection_seed)
     distributed = torch.distributed.is_available() and torch.distributed.is_initialized()
+    if not distributed or torch.distributed.get_rank() == 0:
+        output_dir = Path(args.output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        manifest_path = output_dir / "grounding_selection.json"
+        manifest_path.write_text(json.dumps(provider.selection_record(), indent=2) + "\n")
+        print(f"Grounding selection manifest: {manifest_path}")
     model.sample_dino_latent = RealGroundingSampler(
         model, provider, args.match_dino_noise_rng,
         num_images=args.num_images, batch_size=args.gen_bsz,
         world_size=torch.distributed.get_world_size() if distributed else 1,
         rank=torch.distributed.get_rank() if distributed else 0)
-    model.method_dino = "realval"
+    model.method_dino = f"real{args.grounding_split}"
     model.steps_dino = 0
     model.cfg_dino = 1.0
     model.cfg_interval_dino = (0.0, 0.0)
     print(f"Grounding upper bound: real {args.grounding_split} clean images, t_dino_pixel=1; DinoDiT bypassed")
+    print(f"Grounding selection: per_class={args.grounding_per_class}, seed={args.grounding_selection_seed}")
     print(f"Loaded Pixel checkpoint: {checkpoint_path}; epoch={args.start_epoch}")
 
     log_writer = None if args.skip_metrics else make_log_writer(args.output_dir)
@@ -115,6 +143,8 @@ def main(args):
 if __name__ == "__main__":
     parser = get_args_parser()
     parser.add_argument("--grounding_split", default="val")
+    parser.add_argument("--grounding_per_class", type=int, default=None)
+    parser.add_argument("--grounding_selection_seed", type=int, default=0)
     parser.add_argument("--match_dino_noise_rng", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--skip_metrics", action="store_true")
     parser.set_defaults(evaluate_gen=True)

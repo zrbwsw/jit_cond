@@ -36,6 +36,29 @@ bash sh/sample_pixel.sh \
 
 The sampling scripts support separate `--steps_dino` and `--steps_pixel`, CFG intervals (`--interval_min_dino` / `--interval_max_dino`, `--interval_min_pixel` / `--interval_max_pixel`), and `--noise_scale_dino` / `--noise_scale_pixel`. The default sampler uses Heun with 25 latent and 50 pixel steps. A Stage 2 checkpoint stores the frozen DinoDiT weights alongside the Pixel model. Use `--online_eval` on the Pixel launcher to enable image evaluation during training.
 
+## Real-val grounding (noised / pred)
+
+`noised_grounding_evaluation.py` evaluates Stage 2 checkpoints with training-matched validation-image conditions. It encodes each real validation image and constructs a noised latent with random `t_dino_pixel ~ U[0.75,1)` or an optional fixed value. For `noised`, the noised latent and its time value are passed directly to both Pixel CFG branches. For `pred`, DinoDiT makes a single-step prediction and Pixel uses time tag 1, matching training. The default free-generation path and the clean real-val grounding path still use time tag 1.
+
+```bash
+bash sh/sample_stage2_realval_noised_grounding.sh --dry-run
+GPU_HOST=agent-gpu-l2-1 bash sh/sample_stage2_realval_noised_grounding.sh
+
+# Fixed 25% noise: z_cond = 0.75 * clean + 0.25 * noise
+FIXED_T_DINO_PIXEL=0.75 GPU_HOST=agent-gpu-l2-1 \
+  bash sh/sample_stage2_realval_noised_grounding.sh
+
+# Pred Stage 2 checkpoint
+CONDITION_MODE=pred CHECKPOINT=/path/to/pred/checkpoint-160.pth \
+  GPU_HOST=agent-gpu-l2-1 bash sh/sample_stage2_realval_noised_grounding.sh
+
+# Keep generated PNG files after FID/IS evaluation
+KEEP_IMAGES=1 GPU_HOST=agent-gpu-l2-1 \
+  bash sh/sample_stage2_realval_noised_grounding.sh
+```
+
+The script defaults to the E160 noised checkpoint, 50K images, Pixel Heun-50 and CFG 2.9. Set `CHECKPOINT`, `CONDITION_MODE`, `JIT_CFG`, `EVAL_DIR` or `GPU_HOST` to override these defaults. `FIXED_T_DINO_PIXEL` overrides random time sampling and changes the default evaluation directory to include `realval_<mode>_<value>`. `KEEP_IMAGES=1` preserves generated images; the default still removes them after metrics.
+
 ## Data and model resources
 
 The defaults use DINOv3-B/16 and ImageNet 256. Set `--dino_encoder dinov2b` for DINOv2-reg-B/14 in both stages. Both stages need matching DINO encoder weights and latent statistics. For the statistics, use `--dino_stat_path` or place them in `stat/`. The default search also checks the existing `../JiT_cond_join_dino/stat/` and `../jit_cond_predict_independent_dino/stat/` directories. The default filenames are `dinov3b_rae_imagenet1k_stats.pt` and `dinov2b_rae_imagenet1k_stat.pt`.
