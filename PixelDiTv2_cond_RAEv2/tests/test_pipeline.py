@@ -180,23 +180,23 @@ def test_noised_grounding_matches_time_interpolation(pipeline):
     clean = (images + 1) / 2
     clean_latent = model.dino_encoder.encode(clean)
     torch.manual_seed(123)
-    tokens, t_dino, t_d_p = model.prepare_grounding_pixel(clean, torch.tensor([13]))
+    tokens, t_d_p = model.prepare_grounding_pixel(clean, torch.tensor([13]))
     torch.manual_seed(123)
     expected_t = 0.75 + 0.25 * torch.rand(1)
     expected = expected_t.view(-1, 1, 1, 1) * clean_latent
     expected = expected + (1 - expected_t.view(-1, 1, 1, 1)) * torch.randn_like(clean_latent)
-    torch.testing.assert_close(t_dino, expected_t)
     torch.testing.assert_close(t_d_p, expected_t)
     torch.testing.assert_close(tokens, denoiser.latent_to_tokens(expected))
     loss, metrics = model(images, torch.tensor([13]))
     assert 0.75 <= metrics['t_d_p'] < 1
     loss.backward()
-    assert model.net.t_dino_embedder.mlp[0].weight.grad is not None
+    assert model.net.grounding_proj.weight.grad is not None
+    assert not hasattr(model.net, "t_dino_embedder")
 
 
-@pytest.mark.parametrize('mode', ['noised', 'pred'])
+@pytest.mark.parametrize('mode', ['clean', 'noised', 'pred'])
 @pytest.mark.parametrize('keep_grounding', [False, True])
-def test_noised_generation_uses_clean_time_tag(pipeline, mode, keep_grounding):
+def test_generation_uses_sampled_tokens_only(pipeline, mode, keep_grounding):
     args = pipeline
     args.condition_mode_pixel = mode
     args.evaluate_gen = True
@@ -215,15 +215,38 @@ def test_noised_generation_uses_clean_time_tag(pipeline, mode, keep_grounding):
     finally:
         hook.remove()
     assert len(calls) == 2
-    torch.testing.assert_close(calls[0]['t_dino'], torch.ones(1))
+    assert set(calls[0]) == {'grounding_tokens'}
     if keep_grounding:
         assert calls[1]['grounding_tokens'] is calls[0]['grounding_tokens']
-        assert calls[1]['t_dino'] is calls[0]['t_dino']
+        assert 'skip_grounding' not in calls[1]
     else:
         assert calls[1] == {'skip_grounding': True}
 
 
-def test_pred_grounding_uses_teacher_prediction_and_clean_tag(pipeline):
+def test_legacy_dino_time_weights_are_sampling_only(pipeline):
+    args = pipeline
+    args.condition_mode_pixel = 'noised'
+    model = denoiser.Denoiser(args)
+    checkpoint_io.initialize_ema(model)
+    optimizer = torch.optim.AdamW((p for p in model.parameters() if p.requires_grad))
+    checkpoint = checkpoint_io.build_checkpoint(args, model, optimizer, epoch=1)
+    checkpoint['model']['t_dino_embedder.mlp.0.weight'] = torch.ones(1)
+    checkpoint['model_ema']['net.t_dino_embedder.mlp.0.weight'] = torch.ones(1)
+
+    args.evaluate_gen = True
+    sampling_model = denoiser.Denoiser(args)
+    checkpoint_io.resume_model(sampling_model, None, checkpoint, args)
+    assert not hasattr(sampling_model.net, 't_dino_embedder')
+    assert sampling_model.ema_loaded_for_sampling
+
+    args.evaluate_gen = False
+    resumed = denoiser.Denoiser(args)
+    resumed_optimizer = torch.optim.AdamW((p for p in resumed.parameters() if p.requires_grad))
+    with pytest.raises(ValueError, match='t_dino_embedder'):
+        checkpoint_io.resume_model(resumed, resumed_optimizer, checkpoint, args)
+
+
+def test_pred_grounding_uses_teacher_prediction(pipeline):
     args = pipeline
     args.condition_mode_pixel = 'pred'
     model = denoiser.Denoiser(args).train()
@@ -240,14 +263,13 @@ def test_pred_grounding_uses_teacher_prediction_and_clean_tag(pipeline):
 
     model.raev2_sampler = Predictor()
     torch.manual_seed(123)
-    tokens, t_tag, t_d_p = model.prepare_grounding_pixel(clean, labels)
+    tokens, t_d_p = model.prepare_grounding_pixel(clean, labels)
     torch.manual_seed(123)
     expected_t = 0.75 + 0.25 * torch.rand(1)
     expected = expected_t.view(-1, 1, 1, 1) * clean_latent
     expected = expected + (1 - expected_t.view(-1, 1, 1, 1)) * torch.randn_like(clean_latent)
     expected = expected * 0.5 + 0.25
     torch.testing.assert_close(tokens, denoiser.latent_to_tokens(expected))
-    torch.testing.assert_close(t_tag, torch.ones_like(expected_t))
     torch.testing.assert_close(t_d_p, expected_t)
     torch.testing.assert_close(model.raev2_sampler.t_dino, expected_t)
 

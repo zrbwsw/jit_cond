@@ -66,12 +66,24 @@ def resume_model(model, optimizer, checkpoint, args):
         saved_value = checkpoint["args"].get(field, legacy_defaults.get(field))
         if saved_value != getattr(args, field):
             raise ValueError(f"Checkpoint {field} differs from the requested configuration")
-    model.net.load_state_dict(checkpoint["model"], strict=True)
+    has_legacy_dino_time = (
+        any(name.startswith("t_dino_embedder.") for name in checkpoint["model"])
+        or any(name.startswith("net.t_dino_embedder.") for name in checkpoint["model_ema"])
+    )
+    if optimizer is not None and has_legacy_dino_time:
+        raise ValueError(
+            "Cannot resume optimizer from a checkpoint with t_dino_embedder; "
+            "start a fresh run or load the checkpoint only for sampling"
+        )
+    model_state = {name: value for name, value in checkpoint["model"].items()
+                   if not name.startswith("t_dino_embedder.")}
+    model.net.load_state_dict(model_state, strict=True)
     model.repa_projection.load_state_dict(checkpoint["repa_projection"], strict=True)
     if optimizer is None:
         model.repa_projection.requires_grad_(checkpoint["args"]["repa_weight"] > 0)
     trainable = _trainable(model)
-    ema = checkpoint["model_ema"]
+    ema = {name: value for name, value in checkpoint["model_ema"].items()
+           if not name.startswith("net.t_dino_embedder.")}
     if ema.keys() != trainable.keys():
         raise ValueError("EMA keys differ from the trainable parameter names")
     for name, parameter in trainable.items():

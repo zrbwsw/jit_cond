@@ -9,11 +9,11 @@
 
 两路 latent 的形状都是 `[B,1024,16,16]`。按空间顺序展开为 `[B,256,1024]`，共用一个 `Linear(1024,1280)`。默认 `condition_mode_pixel=clean`，模型将 grounding、Pixel 时间和类别三项相加并做原版 PixelDiT2 的外层 SiLU。训练时只有类别按 0.1 概率替换为 null，每个 patch 仍保留 grounding。默认采样沿用原 PixelDiT2 CFG，无条件分支使用 null 类别并跳过 grounding。
 
-使用 `--cfg_keep_grounding` 采样时，两路共用同一次 DDT 采样得到的 grounding，CFG 只引导类别。对 clean checkpoint，null 类别的 patch 条件为 `SiLU(emb(t_pixel) + emb(null) + W_g z)`。在 noised 和 pred 模式下，两路也共用 checkpoint 对应的 DINO 时间条件。独立评估的默认输出目录添加 `-keep-grounding` 后缀，方便与同一权重的默认 CFG 结果比较。
+使用 `--cfg_keep_grounding` 采样时，两路共用同一次 DDT 采样得到的 grounding，CFG 只引导类别。对 clean checkpoint，null 类别的 patch 条件为 `SiLU(emb(t_pixel) + emb(null) + W_g z)`。clean、noised、pred 三种模式均不向 Pixel 条件注入额外的 DINO time embedding。独立评估的默认输出目录添加 `-keep-grounding` 后缀，方便与同一权重的默认 CFG 结果比较。
 
-设置 `--condition_mode_pixel noised` 后，训练按 `t_dino_pixel ~ U[1-noise_beta_dino_pixel,1)` 对 clean latent 加噪，并额外加入对应的 DINO 时间 embedding，默认 beta 为 `0.25`。采样时，保留 grounding 的分支使用 `t_dino=1`。clean 模式使用 Pixel 时间 embedding，支持恢复已有 clean checkpoint。
+设置 `--condition_mode_pixel noised` 后，训练按 `t_dino_pixel ~ U[1-noise_beta_dino_pixel,1)` 对 clean latent 加噪，默认 beta 为 `0.25`。该时间只用于构造 corruption，不进入 Pixel condition；采样时也只传 RAEv2 采样得到的 tokens。clean 模式使用 Pixel 时间 embedding，支持恢复已有 clean checkpoint。
 
-设置 `--condition_mode_pixel pred` 后，训练会将 noised latent 交给冻结的 RAEv2 DDT-XL EMA，取 full branch 的单步 clean x-prediction，不使用 CFG/IG；Pixel 使用 `t_dino=1`。RAEv2 的时间方向为 `x_t=(1-t)*clean+t*noise`，所以 DDT 接收 `t_rae=1-t_dino_pixel`。只有 pred 训练需要加载 DDT checkpoint 和配置，采样仍使用官方完整 RAEv2 sampler。
+设置 `--condition_mode_pixel pred` 后，训练会将 noised latent 交给冻结的 RAEv2 DDT-XL EMA，取 full branch 的单步 clean x-prediction，不使用 CFG/IG；Pixel 只接收预测 tokens，不接收 DINO 时间 embedding。RAEv2 的时间方向为 `x_t=(1-t)*clean+t*noise`，所以 DDT 接收 `t_rae=1-t_dino_pixel`。只有 pred 训练需要加载 DDT checkpoint 和配置，采样仍使用官方完整 RAEv2 sampler。
 
 ## 训练与采样设置
 
@@ -21,7 +21,7 @@
 - 默认损失为 `L_FM + 0.5 × L_REPA`。FM 在 velocity 空间计算。REPA teacher 是冻结的 DINOv2-B/14，同一张 clean crop 经原版预处理后提供 256 个目标 tokens，每个 768 维。第 8 层输出经三层 MLP 后对齐 teacher，损失为平均 `1 − cosine_similarity`。
 - REPA 取 `patch_blocks[7]`，此处正好是 256 个 image tokens。32 个 context tokens 到 `patch_blocks[8]` 才插入。若显式改到后面的层做 REPA，代码会先移除 context tokens。
 - 默认训练 160 epoch。H200 默认使用 8 卡，每卡 batch 128，每个 batch 执行一次 optimizer 更新，global batch 为 1024。AdamW 使用 betas `(0.9,0.95)`、weight decay 0，前 6255 次 optimizer 更新线性 warmup 到 `2e-4`，之后保持恒定。采样使用 decay 0.9999 的 Pixel EMA。
-- RAEv2 sampler 从官方 `configs/stage2/sampling/imagenet-dinov3l-k7.yaml` 读取参数，默认 100 步、CFG 1.0、IG 1.78，IG 区间为 `[0.1,1]`。RAEv2 按自己的时间约定从 1 积分到 0，Pixel 从 0 积分到 1。clean 模式不向 Pixel 条件加入语义时间；noised 模式在训练时加入实际 `t_dino_pixel`，pred 和采样统一为 1。Pixel 使用 Heun 50 步，最后一步 Euler。Pixel CFG 2.4 只在 `0.125 < t < 0.9` 时生效。
+- RAEv2 sampler 从官方 `configs/stage2/sampling/imagenet-dinov3l-k7.yaml` 读取参数，默认 100 步、CFG 1.0、IG 1.78，IG 区间为 `[0.1,1]`。RAEv2 按自己的时间约定从 1 积分到 0，Pixel 从 0 积分到 1。clean、noised、pred 均不向 Pixel 条件加入额外的 DINO 时间 embedding。Pixel 使用 Heun 50 步，最后一步 Euler。Pixel CFG 2.4 只在 `0.125 < t < 0.9` 时生效。
 - 在线评估和独立采样都由 rank 0 输出 `Generation step i/N` 批次进度；每个 batch 内先显示 `RAEv2 DiT sampling` 的 100 步 tqdm 进度条，完成后显示 `Pixel DiT sampling` 的 50 步进度条。其他 rank 不输出进度条。
 
 ## H200 入口
@@ -54,6 +54,6 @@ PIXEL_CHECKPOINT=/path/to/checkpoint-160.pth bash sh/sample_pixel.sh --condition
 | RAEv2 源码根目录、DDT checkpoint、采样 YAML | `RAEV2_ROOT`、`RAEV2_CHECKPOINT`、`RAEV2_CONFIG` |
 | JiT ImageNet-256 FID 统计目录 | `FID_STATS_ROOT` |
 
-Pixel checkpoint 包含主干、grounding Linear、REPA projection、可训练参数 EMA、optimizer、已完成的 epoch 数及统计文件的 SHA-256；noised/pred 模式还包含 DINO time embedder。续训和独立采样都会校验统计指纹及 condition 模式。默认输出目录为 `checkpoints/raev2-dinov3l-k7-pixeldit2-h16-e160/`，noised/pred 分别写入带对应模式后缀的独立目录。
+Pixel checkpoint 包含主干、grounding Linear、REPA projection、可训练参数 EMA、optimizer、已完成的 epoch 数及统计文件的 SHA-256；任何模式都不包含 DINO time embedder。续训和独立采样都会校验统计指纹及 condition 模式。旧 noised/pred checkpoint 中的时间嵌入权重仅在采样加载时丢弃；带 optimizer 的训练恢复会被明确拒绝，以避免参数组不匹配。默认输出目录为 `checkpoints/raev2-dinov3l-k7-pixeldit2-h16-e160/`，noised/pred 分别写入带对应模式后缀的独立目录。
 
 训练与评估入口为 [main_jit.py](main_jit.py)，grounding、loss 和 Heun 位于 [denoiser.py](denoiser.py)，主干和 REPA 分别在 [pixeldit2_c2i.py](pixeldit2_c2i.py) 和 [repa.py](repa.py)。在现有 PyTorch 环境运行 `python -m pytest -q tests` 可用合成张量验证接口、梯度、EMA、checkpoint 和采样分支。

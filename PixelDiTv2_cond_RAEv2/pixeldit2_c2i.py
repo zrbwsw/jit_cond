@@ -31,7 +31,6 @@ class PixelDiT2(nn.Module):
         proj_dropout: float = 0.2,
         mlp_hidden_multiple: int = 0,
         single_silu_cond: bool = False,
-        use_t_dino: bool = False,
     ):
         super().__init__()
         if patch_size != 16 or in_channels != 3:
@@ -46,7 +45,6 @@ class PixelDiT2(nn.Module):
         self.in_context_len = in_context_len
         self.in_context_start = in_context_start
         self.single_silu_cond = single_silu_cond
-        self.use_t_dino = use_t_dino
 
         if not 0 <= in_context_start < depth:
             raise ValueError(
@@ -54,7 +52,6 @@ class PixelDiT2(nn.Module):
             )
 
         self.t_embedder = TimestepConditioner(hidden_size)
-        self.t_dino_embedder = TimestepConditioner(hidden_size) if use_t_dino else None
         self.y_embedder = ClassEmbedder(num_classes + 1, hidden_size)
         self.s_embedder = PatchTokenEmbedder(in_channels * patch_size ** 2, hidden_size, bias=True)
         self.in_context_posemb = (
@@ -89,9 +86,6 @@ class PixelDiT2(nn.Module):
         nn.init.normal_(self.y_embedder.embedding_table.weight, std=0.02)
         nn.init.normal_(self.t_embedder.mlp[0].weight, std=0.02)
         nn.init.normal_(self.t_embedder.mlp[2].weight, std=0.02)
-        if self.t_dino_embedder is not None:
-            nn.init.normal_(self.t_dino_embedder.mlp[0].weight, std=0.02)
-            nn.init.normal_(self.t_dino_embedder.mlp[2].weight, std=0.02)
         if self.in_context_posemb is not None:
             nn.init.normal_(self.in_context_posemb, std=0.02)
         for block in self.patch_blocks:
@@ -112,13 +106,9 @@ class PixelDiT2(nn.Module):
             self._pos_cache[key] = pos
         return self._pos_cache[key].to(device)
 
-    def _grounded_condition(self, grounding_tokens, t_emb, y_emb, t_dino=None):
+    def _grounded_condition(self, grounding_tokens, t_emb, y_emb):
         grounding = self.grounding_proj(grounding_tokens)
         c = grounding + t_emb.unsqueeze(1) + y_emb
-        if self.t_dino_embedder is not None:
-            if t_dino is None:
-                raise ValueError("t_dino is required when DINO time conditioning is enabled")
-            c = c + self.t_dino_embedder(t_dino).unsqueeze(1)
         return c if self.single_silu_cond else F.silu(c)
 
     def _null_condition(self, t_emb, y_emb, num_patches):
@@ -135,7 +125,6 @@ class PixelDiT2(nn.Module):
         grounding_tokens: Optional[torch.Tensor] = None,
         skip_grounding: bool = False,
         repa_align_layer: Optional[int] = None,
-        t_dino: Optional[torch.Tensor] = None,
     ):
         """Optionally return patch features from the specified one-based REPA layer."""
         batch, channels, height, width = x.shape
@@ -157,7 +146,7 @@ class PixelDiT2(nn.Module):
             if grounding_tokens is None or grounding_tokens.shape != expected:
                 actual = None if grounding_tokens is None else tuple(grounding_tokens.shape)
                 raise ValueError(f"Expected grounding_tokens of shape {expected}, got {actual}")
-            c = self._grounded_condition(grounding_tokens, t_emb, y_emb, t_dino)
+            c = self._grounded_condition(grounding_tokens, t_emb, y_emb)
 
         s = self.s_embedder(
             F.unfold(x, kernel_size=self.patch_size, stride=self.patch_size).transpose(1, 2)
