@@ -80,6 +80,7 @@ def test_trainable_params_loss_and_resume(pipeline, tmp_path):
     raw = checkpoint_io.read_checkpoint(path)
     raw["args"].pop("condition_mode_pixel")
     raw["args"].pop("noise_beta_dino_pixel")
+    raw["args"].pop("cfg_keep_grounding")
     checkpoint_io.resume_model(restored, restored_opt, raw, args)
     assert args.start_epoch == 7
     assert restored_opt.state_dict()['state'].keys() == opt.state_dict()['state'].keys()
@@ -88,14 +89,21 @@ def test_trainable_params_loss_and_resume(pipeline, tmp_path):
     with checkpoint_io.use_ema(restored):
         for name, ema in model.ema_params.items():
             torch.testing.assert_close(restored.get_parameter(name), ema)
+    args.evaluate_gen = True
+    args.cfg_keep_grounding = True
+    sampling_model = denoiser.Denoiser(args)
+    checkpoint_io.resume_model(sampling_model, None, raw, args)
+    assert sampling_model.cfg_keep_grounding and sampling_model.ema_loaded_for_sampling
     (tmp_path / 'test-stats').write_bytes(b'another latent space')
     with pytest.raises(ValueError, match='statistic'):
         checkpoint_io.resume_model(restored, restored_opt, raw, args)
 
 
-def test_heun_reuses_one_semantic_sample(pipeline):
+@pytest.mark.parametrize('keep_grounding', [False, True])
+def test_heun_reuses_one_semantic_sample(pipeline, keep_grounding):
     args = pipeline
     args.evaluate_gen = True
+    args.cfg_keep_grounding = keep_grounding
     model = denoiser.Denoiser(args).eval()
     assert model.dino_encoder is model.repa_encoder is None
     labels = torch.tensor([13])
@@ -126,7 +134,12 @@ def test_heun_reuses_one_semantic_sample(pipeline):
     assert [t for t, _, _ in cond] == pytest.approx([0, 1/3, 1/3, 2/3, 2/3])
     grounding = cond[0][2]['grounding_tokens']
     assert all(label == 13 and kw['grounding_tokens'] is grounding for _, label, kw in cond)
-    assert all(label == model.num_classes and kw['skip_grounding'] for _, label, kw in uncond)
+    assert all(label == model.num_classes for _, label, _ in uncond)
+    if keep_grounding:
+        assert all(kw['grounding_tokens'] is grounding and 'skip_grounding' not in kw
+                   for _, _, kw in uncond)
+    else:
+        assert all(kw == {'skip_grounding': True} for _, _, kw in uncond)
 
 
 def test_pixel_cfg_interval_and_velocity_scale(pipeline):
@@ -154,6 +167,7 @@ def test_release_configuration():
     assert (args.repa_align_layer, args.repa_weight) == (8, 0.5)
     assert (args.t_mean_pixel, args.t_std_pixel, args.noise_scale_pixel, args.t_eps) == (-0.8, 0.8, 1.0, 0.05)
     assert (args.steps_pixel, args.cfg_pixel, args.interval_min_pixel, args.interval_max_pixel) == (50, 2.4, 0.125, 0.9)
+    assert not args.cfg_keep_grounding
     assert args.lr == 2e-4 and args.warmup_steps == 6255 and args.ema_decay == 0.9999
     assert (args.batch_size, args.accum_steps) == (128, 1)
 
@@ -181,10 +195,12 @@ def test_noised_grounding_matches_time_interpolation(pipeline):
 
 
 @pytest.mark.parametrize('mode', ['noised', 'pred'])
-def test_noised_generation_uses_clean_time_tag(pipeline, mode):
+@pytest.mark.parametrize('keep_grounding', [False, True])
+def test_noised_generation_uses_clean_time_tag(pipeline, mode, keep_grounding):
     args = pipeline
     args.condition_mode_pixel = mode
     args.evaluate_gen = True
+    args.cfg_keep_grounding = keep_grounding
     model = denoiser.Denoiser(args).eval()
     model.steps_pixel = 1
     model.raev2_sampler = type('Sampler', (), {
@@ -200,7 +216,11 @@ def test_noised_generation_uses_clean_time_tag(pipeline, mode):
         hook.remove()
     assert len(calls) == 2
     torch.testing.assert_close(calls[0]['t_dino'], torch.ones(1))
-    assert 't_dino' not in calls[1] and calls[1]['skip_grounding']
+    if keep_grounding:
+        assert calls[1]['grounding_tokens'] is calls[0]['grounding_tokens']
+        assert calls[1]['t_dino'] is calls[0]['t_dino']
+    else:
+        assert calls[1] == {'skip_grounding': True}
 
 
 def test_pred_grounding_uses_teacher_prediction_and_clean_tag(pipeline):

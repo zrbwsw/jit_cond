@@ -7,9 +7,11 @@
 | 训练 | 同一张 clean crop 经冻结的 DINOv3-L/16 k=7，再用 RAEv2 的 mean、var 标准化 | 每个 patch 使用自己的 grounding，加上 Pixel 时间和类别 embedding |
 | 生成 | 冻结的 RAEv2 Stage 2 DDT EMA 从独立高斯噪声和类别采样 normalized latent | 每个样本取一次 latent，复用于整条 Pixel Heun 轨迹 |
 
-两路 latent 的形状都是 `[B,1024,16,16]`。按空间顺序展开为 `[B,256,1024]`，共用一个 `Linear(1024,1280)`。默认 `condition_mode_pixel=clean`，模型将 grounding、Pixel 时间和类别三项相加并做原版 PixelDiT2 的外层 SiLU。训练时只有类别按 0.1 概率替换为 null，即使替换了类别，每个 patch 仍保留 grounding。采样沿用原 PixelDiT2 CFG，无条件分支使用 null 类别并跳过 grounding。因此训练中出现的 null 类别输入仍比采样的无条件分支多一份语义信息。
+两路 latent 的形状都是 `[B,1024,16,16]`。按空间顺序展开为 `[B,256,1024]`，共用一个 `Linear(1024,1280)`。默认 `condition_mode_pixel=clean`，模型将 grounding、Pixel 时间和类别三项相加并做原版 PixelDiT2 的外层 SiLU。训练时只有类别按 0.1 概率替换为 null，每个 patch 仍保留 grounding。默认采样沿用原 PixelDiT2 CFG，无条件分支使用 null 类别并跳过 grounding。
 
-设置 `--condition_mode_pixel noised` 后，训练按 `t_dino_pixel ~ U[1-noise_beta_dino_pixel,1)` 对 clean latent 加噪，并额外加入对应的 DINO 时间 embedding；默认 beta 为 `0.25`。采样时 conditional 分支统一使用 `t_dino=1`，unconditional 分支仍跳过 grounding 和该时间条件。clean 模式不会创建或加载这套额外 embedding，旧 clean checkpoint 可以继续恢复。
+使用 `--cfg_keep_grounding` 采样时，两路共用同一次 DDT 采样得到的 grounding，CFG 只引导类别。对 clean checkpoint，null 类别的 patch 条件为 `SiLU(emb(t_pixel) + emb(null) + W_g z)`。在 noised 和 pred 模式下，两路也共用 checkpoint 对应的 DINO 时间条件。独立评估的默认输出目录添加 `-keep-grounding` 后缀，方便与同一权重的默认 CFG 结果比较。
+
+设置 `--condition_mode_pixel noised` 后，训练按 `t_dino_pixel ~ U[1-noise_beta_dino_pixel,1)` 对 clean latent 加噪，并额外加入对应的 DINO 时间 embedding，默认 beta 为 `0.25`。采样时，保留 grounding 的分支使用 `t_dino=1`。clean 模式使用 Pixel 时间 embedding，支持恢复已有 clean checkpoint。
 
 设置 `--condition_mode_pixel pred` 后，训练会将 noised latent 交给冻结的 RAEv2 DDT-XL EMA，取 full branch 的单步 clean x-prediction，不使用 CFG/IG；Pixel 使用 `t_dino=1`。RAEv2 的时间方向为 `x_t=(1-t)*clean+t*noise`，所以 DDT 接收 `t_rae=1-t_dino_pixel`。只有 pred 训练需要加载 DDT checkpoint 和配置，采样仍使用官方完整 RAEv2 sampler。
 
@@ -29,6 +31,7 @@
 bash sh/train_pixel.sh
 bash sh/train_pixel.sh --resume /path/to/checkpoint-last.pth
 PIXEL_CHECKPOINT=/path/to/checkpoint-160.pth bash sh/sample_pixel.sh
+PIXEL_CHECKPOINT=/path/to/checkpoint-160.pth bash sh/sample_pixel_keep_grounding.sh
 
 # 可选：训练时使用加噪 grounding；GPU2 脚本会自动使用独立的 noised 输出目录
 CONDITION_MODE=noised NOISE_BETA_DINO_PIXEL=0.25 bash sh/train_pixel_gpu2.sh

@@ -27,6 +27,8 @@ def get_args_parser():
     p.add_argument('--steps_pixel', default=50, type=int)
     p.add_argument('--sampling_method_pixel', choices=['heun'], default='heun')
     p.add_argument('--cfg_pixel', default=2.4, type=float)
+    p.add_argument('--cfg_keep_grounding', action='store_true',
+                   help='Reuse the conditional grounding on the Pixel CFG null-label branch')
     p.add_argument('--interval_min_pixel', default=0.125, type=float)
     p.add_argument('--interval_max_pixel', default=0.9, type=float)
     p.add_argument('--epochs', default=160, type=int)
@@ -113,7 +115,10 @@ def main(args):
     checkpoint = validate_args(args)
     if not args.output_dir:
         if checkpoint:
-            out = checkpoint.parent / f'eval-{checkpoint.stem}' if args.evaluate_gen else checkpoint.parent
+            out = checkpoint.parent
+            if args.evaluate_gen:
+                suffix = '-keep-grounding' if args.cfg_keep_grounding else ''
+                out = out / f'eval-{checkpoint.stem}{suffix}'
         else:
             condition_suffix = '' if args.condition_mode_pixel == 'clean' else f'-{args.condition_mode_pixel}'
             out = PROJECT_ROOT / 'checkpoints' / f'raev2-dinov3l-k7-pixeldit2-h16{condition_suffix}-e{args.epochs}'

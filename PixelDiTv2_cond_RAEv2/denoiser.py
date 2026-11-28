@@ -44,6 +44,7 @@ class Denoiser(nn.Module):
         self.t_mean_pixel, self.t_std_pixel = args.t_mean_pixel, args.t_std_pixel
         self.noise_scale_pixel, self.t_eps = args.noise_scale_pixel, args.t_eps
         self.steps_pixel, self.cfg_pixel = args.steps_pixel, args.cfg_pixel
+        self.cfg_keep_grounding = args.cfg_keep_grounding
         self.cfg_interval_pixel = (args.interval_min_pixel, args.interval_max_pixel)
         self.ema_decay = args.ema_decay
         self.ema_params = None
@@ -146,7 +147,9 @@ class Denoiser(nn.Module):
         if t_dino is not None:
             condition_kwargs["t_dino"] = t_dino
         v_cond = (self.net(x, t.flatten(), labels, **condition_kwargs) - x) / scale
-        v_null = (self.net(x, t.flatten(), null_labels, skip_grounding=True) - x) / scale
+        # 保留 grounding 时，两路共用同一组 patch tokens 和时间条件，只替换类别标签。
+        null_kwargs = condition_kwargs if self.cfg_keep_grounding else {"skip_grounding": True}
+        v_null = (self.net(x, t.flatten(), null_labels, **null_kwargs) - x) / scale
         low, high = self.cfg_interval_pixel
         inside = (t < high) & ((t > low) | (low <= 0))
         guidance = torch.where(inside, self.cfg_pixel, 1.0)
