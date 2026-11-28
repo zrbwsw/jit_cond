@@ -15,6 +15,9 @@ CONDITION_MODE=noised NOISE_BETA_DINO_PIXEL=0.25 bash sh/train_pixel_raev2.sh
 
 # 可选：加噪后先经过冻结的 RAEv2 DDT-XL 单步 clean prediction
 CONDITION_MODE=pred NOISE_BETA_DINO_PIXEL=0.25 bash sh/train_pixel_raev2.sh
+
+# JiT-L/16 + pred + 80 epoch（默认 GPU1，独立 pixeljit-l 输出目录）
+bash sh/train_pixel_raev2_l_pred_e80_gpu1.sh
 ```
 
 使用 noised/pred checkpoint 采样或续训时，也需设置相同的 `CONDITION_MODE`；旧 clean checkpoint 在新代码下仍默认按 clean 模式恢复。`pred` 仅训练时额外调用 DDT 单步预测，clean/noised 训练不加载 DDT。

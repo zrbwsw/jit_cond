@@ -247,3 +247,16 @@ def test_raev2_predict_clean_uses_complementary_time_and_full_output():
     torch.testing.assert_close(sampler.model.t, 1 - t_dino)
     torch.testing.assert_close(sampler.model.kwargs["context"], labels)
     assert sampler.model.kwargs["attn_mask"] is None
+
+
+def test_l16_grounding_projection_matches_raev2():
+    from model_jit import JiT_models
+
+    with torch.device("meta"):
+        model = JiT_models["JiT-L/16"](
+            input_size=256, in_channels=3, num_classes=1000, grounding_dim=1024)
+    assert model.hidden_size == 1024
+    assert len(model.blocks) == 24
+    assert model.num_heads == 16
+    assert model.grounding_proj.in_features == 1024
+    assert model.grounding_proj.out_features == 1024

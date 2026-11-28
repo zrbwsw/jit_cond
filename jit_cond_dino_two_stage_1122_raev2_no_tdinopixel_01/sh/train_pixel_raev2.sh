@@ -3,6 +3,7 @@ set -euo pipefail
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 GPU_HOST="${GPU_HOST:-agent-gpu-l2-1}"
 EPOCHS="${EPOCHS:-160}"
+MODEL="${MODEL:-JiT-B/16}"
 CONDITION_MODE="${CONDITION_MODE:-clean}"
 NOISE_BETA_DINO_PIXEL="${NOISE_BETA_DINO_PIXEL:-0.25}"
 CONDITION_SUFFIX=""
@@ -50,7 +51,7 @@ args=(
     --dino_encoder_repo "$DINO_ENCODER_REPO"
     --raev2_checkpoint "$RAEV2_CHECKPOINT"
     --raev2_config "$RAEV2_CONFIG"
-    --model JiT-B/16
+    --model "$MODEL"
     --condition_mode_pixel "$CONDITION_MODE" --noise_beta_dino_pixel "$NOISE_BETA_DINO_PIXEL"
     --epochs "$EPOCHS"
     --output_dir "$OUTPUT_DIR"
