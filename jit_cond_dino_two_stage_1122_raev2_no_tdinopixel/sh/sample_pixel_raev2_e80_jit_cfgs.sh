@@ -39,6 +39,7 @@ for cfg in "${cfgs[@]}"; do
     eval_dir="$(dirname "$CHECKPOINT")/eval_${CHECKPOINT_TAG}_jitcfg${cfg}_${RAEV2_DIR_TAG:-raev2}_heun100_pixelheun${STEPS_PIXEL}_image${NUM_IMAGES}"
     args=(
         --checkpoint "$CHECKPOINT"
+        --condition_mode_pixel "${CONDITION_MODE:-clean}" --noise_beta_dino_pixel "${NOISE_BETA_DINO_PIXEL:-0.25}"
         --dino_stat_path "$DINO_STAT_PATH"
         --dino_encoder_weights_path "$DINO_ENCODER_WEIGHTS_PATH"
         --dino_encoder_repo "$DINO_ENCODER_REPO"

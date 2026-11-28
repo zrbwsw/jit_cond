@@ -1,66 +1,144 @@
-# JiT 条件分支实验进度与表格说明
+# PixelCond 实验结果与表格说明
 
-更新于 2026-11-25（进度核对以最近日志为准）。
+更新于 2026-11-28。本文按顺序对应 [exp1113.tex](exp1113.tex) 的 **Table 1–8**，记录已经由日志确认的实验结果。FID 越低越好，IS 越高越好；除特别说明外，指标均来自 50,000 张生成图片。
 
-本文对应 [exp1113.tex](exp1113.tex) 的前三张表。表格记录已经回填的实验结果；正在训练或采样但尚未回填的结果单独列在“当前实验进度”中，二者不混用。
+空白项表示尚未形成有效的对应指标，不用训练中的估计值代替。不同表的语义 encoder、条件构造、训练轮数、采样器和 CFG 不完全相同，比较时必须先核对这些设置。
 
-## 当前实验进度
+## 最新结果摘要
 
-- **GPU1：per-file cached_recon E320 续训中。** 旧分片缓存已全部转换为每张图一个 `.npy` 文件的 v3 格式，已从 E45 恢复训练。当前日志索引为 285，即正在训练第 286 轮，最近约 0.13 秒/iter，说明 per-file 已消除旧分片随机读取的主要瓶颈。E280 在线结果为 FID 5.4851、IS 264.0797，下一次评估为 E300。
-- **GPU2：pred_drop Stage 2 已完成 E200。** 最终结果为 FID 5.3077、IS 267.5210；过程中最低 FID 为 E160 的 5.2742。E160、JiT CFG 2.1 的补充采样结果为 **FID 4.74、IS 273.0**，已加入表 3。
-- **noflip Stage 1 已在 E160 停止。** 最终重建验证为 MSE 0.021832、Relative L2 0.148482、Patch Cosine 0.988753，checkpoint 和日志均已保留。
-- **two-stage noised 已停止。** clean-image reference（E_D=E_P=160、`t_dino_pixel=1`）结果为 FID 3.45、IS 207.5；普通 DinoDiT 采样结果为 FID 5.2038、IS 268.6。
-- `JiT`、`JiT_cond` 和 `JiT_cond_cls` 主要作为表 1 的已有代码与历史结果保留。
+- **RAEv2 + JiT-B noised**：E80、Pixel CFG 2.0 时当前最佳为 **FID 3.2272、IS 233.6044**，表中写为 3.23 / 233.6。有效采样明确使用 `condition_mode_pixel=noised`；此前误用 clean 模式的失败采样不计入结果。
+- **RAEv2 + JiT-B pred**：目前有 E20、E40 指标，E40 为 **FID 4.25、IS 223.6**。E60、E80 尚无有效生成指标，保持空白。
+- **RAEv2 + PixelDiT2-H/16**：E60 为 **FID 5.52、IS 197.3**。同 epoch 下，clean JiT-B 为 3.98 / 230.0，noised JiT-B 为 3.78 / 229.9，因此当前 H 的 FID 更高、IS 更低，**60 epoch 的 H 明显不如 B**。E80 指标尚未形成，不能提前判断最终结果。
+- 表 4–6 的 `_no_tdinopixel` 版本统一使用 `cond = E_pixel(t_pixel) + E_y(y) + W_g(grounding_tokens)`。`t_dino_pixel` 只用于训练时的 latent corruption 或 pred teacher 调用，不再作为额外 Pixel embedding 注入。
 
-后续新启动或续训的实验使用 `save_interval=80` 保存持久 checkpoint；`save_last_freq=5` 和在线评估频率保持不变。已经在运行的进程不因此重启。
+## Table 1：语义内容与 AdaLN 注入方式
 
-## 表 1：不同语义条件与 AdaLN 注入方式
+Table 1 是早期 JiT-B/16 条件分支对照，核心变量是语义内容和注入方式：
 
-表 1 比较 JiT-B/16 在 clean 或 noisy 图像语义条件下的生成结果，核心变量是**条件内容**和**条件注入方式**：
+- 原始 JiT 基线：E80、CFG 5.1 时 FID 6.77；E600 时 FID 3.66。
+- clean patch + Patch-level AdaLN：E101、使用真实参考图时为 FID 3.58，属于 oracle/reference conditioning，不是自由生成结果。
+- class-level grounding：每类共享一张验证图，E101 为 FID 28.26，明显差于实例级参考。
+- clean CLS + Block-level AdaLN：E80 为 FID 6.53。
+- noisy image → frozen DINO → projector：E80 为 FID 14.31，采样时每个轨迹状态都需重新提取条件。
 
-- **JiT**：原始类别条件基线，不使用图像 grounding。
-- **clean patch + Patch-level AdaLN**：从真实 clean 图的 DINOv3-B patch tokens 构造逐 patch 条件。采样时使用验证集真实图作为参考，因此属于 oracle/reference conditioning，用来估计理想语义条件的收益，不是无参考图生成的严格上界。
-- **Class-level grounding**：每类只选一张验证图，并由该类 50 个生成样本共享，用于检验类别级参考与实例级参考的差异。
-- **clean CLS + Block-level AdaLN**：使用 clean 图的全局 CLS token，而不是逐 patch token；各 Transformer block 通过 AdaLN 使用这个全局条件。
-- **noisy patch + projector + Patch-level AdaLN**：从当前 noisy image 提取冻结 DINO 特征，再经 projector 构造 patch 条件。采样不读取真实参考图，但每个轨迹状态都需要重新提取条件。
+这些结果说明语义的空间粒度、参考图信息和注入方式都会影响生成，但不能把差距只归因于 AdaLN 的名称。
 
-表中目前较有代表性的结果包括：实例级 clean patch 在 E101 的 FID 为 3.58；class-level 对照在 E101 为 28.26；clean CLS 在 E80 为 6.53；noisy projector 分支在 E80 为 14.31。它们说明不同条件信息和空间分配会显著影响结果，但不能把差距只归因于 AdaLN 名称，因为参考图信息、token 内容和采样计算路径也同时改变。
+## Table 2：DinoDiT noised / 联合与两阶段 Pixel JiT
 
-## 表 2：DinoDiT 与 Pixel JiT 的联合条件生成
+Table 2 使用 DINOv3-B/16 patch latent，主体条件为：
 
-表 2 对应 `c = t_pixel + y + t_dino_pixel + W_g z_cond`，其中 `z_cond` 是 DINOv3-B/16 patch 空间中的条件。
+`c = t_pixel + y + t_dino_pixel + W_g z_cond`。
 
-- **联合训练组**：DinoDiT 和 Pixel JiT 一起训练，所以在线评估时 `E_D = E_P`。联合损失为 `L = L_JiT + 0.333 L_DINO`，两列 loss 分别记录，不用总 loss 替代。
-- **D_heun25 / P_heun50**：分别表示 DinoDiT 的 25 步 Heun 采样和 Pixel JiT 的 50 步 Heun 采样；每列同时给出 CFG scale 与 interval。
-- **E80 的 CFG 对照**：同一个联合训练 checkpoint 下，JiT CFG 2.9 时 FID 为 5.35，CFG 2.3 时为 5.21。空白的 epoch 和 loss 表示沿用同组上一行，不是缺失模型。
-- **clean-image dino patch tokens 行**：不经过 DinoDiT 采样，直接使用真实验证图的 DINO patch tokens，并将 `t_dino_pixel` 固定为 1，即 `c = t_pixel + y + 1 + W_g z_cond`。此前 JoinDino E80 参考结果为 FID 3.65；noised E_D=160、E_P=160 的结果为 **FID 3.45、IS 207.5**。这是真实 clean 语义参考，用来衡量 DinoDiT 条件误差带来的差距，不能与采样条件行当作完全相同的推理设置。
-- **冻结 DinoDiT E160 → Pixel E80 组**：DinoDiT 与 Pixel 的训练量不再相等；Pixel 阶段使用冻结的 E160 DinoDiT。JiT CFG 2.9 时 FID 为 5.28，最佳记录的 CFG 2.1 为 4.91。这里 `loss_jit` 是 Stage 2 的 Pixel loss，`loss_dino` 是 Stage 1 的历史参考值。
+主要结果：
 
-表 2 的重点是联合训练能否让 DinoDiT 提供适合 Pixel JiT 的条件，以及更充分的 DinoDiT 训练和 CFG 调整能带来多少收益。
+- 联合训练 E80：JiT CFG 2.9 时 FID 5.35，CFG 2.3 时 5.21。
+- 冻结 DinoDiT E160 → Pixel E80：CFG 2.9 时 FID 5.28。
+- 同组 Pixel E160：CFG 2.9 时 FID 5.13；DINO CFG 1.8、JiT CFG 2.1 时 FID 4.76。
+- clean-val reference：FID 3.45；clean-train reference：FID 2.28。它们是使用真实图像语义的参考结果，与 DinoDiT 自由采样条件不是同一种推理设置。
+- noised clean-train：随机 `t_dino_pixel` 时 FID 2.36，固定 0.75 时为 2.49。
 
-## 表 3：冻结 DinoDiT 的单步预测条件
+该表用于衡量 DinoDiT 条件误差以及真实语义参考与自由生成之间的差距。
 
-表 3 对应独立两阶段训练：先训练并冻结 DinoDiT，再训练 Pixel JiT。
+## Table 3：冻结 DinoDiT 的单步 pred 条件
 
-训练时，对 clean latent `z` 按 `t_dino_pixel` 加噪，并使用冻结 DinoDiT 做一次单步预测得到 `z_cond`；不是直接把加噪后的 clean latent 当作条件。Pixel JiT 只优化 `L_JiT`，所以早期 E_D = 80 组的 `loss_dino` 记为 `--`。推理时仍使用同一个冻结 DinoDiT checkpoint 完成 DINO Heun-25 采样，再进行 Pixel Heun-50 采样。
+Table 3 在训练时先对 clean latent 加噪，再由冻结 DinoDiT 做一次单步预测，Pixel 使用预测后的 tokens 和 `t_dino=1`。Inference 仍由冻结 DinoDiT 完成多步语义采样，再执行 Pixel sampling。
 
-- **E_D = 80 组**：Pixel 从 E20 到 E80 逐步改善；Pixel E80 时，JiT CFG 2.9 的 FID 为 5.58，CFG 2.3 为 5.18。
-- **E_D = 160 组**：更强的冻结 DinoDiT 用于训练和推理；Pixel E80 时，JiT CFG 2.9 的 FID 为 5.43，最佳记录的 CFG 2.1 为 4.78。Pixel E160 时，CFG 2.9 的 FID 为 5.25，CFG 2.1 为 4.71（IS 272.6）。`loss_dino = 0.3687` 是该 Stage 1 checkpoint 的历史 loss。另有 clean-image reference（E_D=E_P=160、`t_dino_pixel=1`）结果 **FID 4.85、IS 193.3**；由于 pred 训练使用单步预测 token，该 clean-reference 不是严格上界。
-- **pred_drop（P1 修复）**：训练时对传给 DinoDiT 的类别标签独立执行 dropout，使 Pixel 同时见过 DinoDiT 的有条件和无条件 token。E_D=E_P=160、DINO CFG 2.0、JiT CFG 2.1 时为 **FID 4.74、IS 273.0**；旧 pred 在相同训练轮数和 CFG 下为 FID 4.71、IS 272.6。FID 仅相差 0.03，IS 相差 0.4，说明修复后结果与修复前基本相当：P1 解决了训练—推理条件分布不一致，但没有带来显著的生成指标改善。
+- DinoDiT E80 → Pixel E80：JiT CFG 2.9 时 FID 5.58，CFG 2.3 时 5.18。
+- DinoDiT E160 → Pixel E80：CFG 2.9 时 FID 5.43。
+- DinoDiT E160 → Pixel E160：CFG 2.9 时 FID 5.25；DINO CFG 1.8、JiT CFG 2.1 时 FID 4.62；DINO Heun-50 后进一步达到 FID 4.32。
+- clean-val reference：FID 4.85；clean-train reference：FID 3.52。
+- pred clean-train：随机 corruption time 时 FID 2.51，固定 0.75 时为 2.39。
 
-表 3 与表 2 的主要区别是：表 3 在 Pixel 训练时使用**冻结 DinoDiT 的单步预测条件**；表 2 的主体是联合训练，其后续 noised 组使用直接加噪条件。比较两组时应同时核对 `E_D`、`E_P`、条件生成方式和两边的 CFG，而不能只比较最佳 FID。
+Table 3 与 Table 2 的关键区别是：这里训练注入的是 DinoDiT 的单步预测，而 Table 2 的 noised 主体直接使用加噪 latent。
 
-## 表格阅读约定与代码入口
+## Table 4：RAEv2 clean latent + JiT-B/16
 
-- Epoch 表示已经完成的训练轮数；`E_D` 和 `E_P` 分别对应 DinoDiT 与 Pixel JiT。
-- FID 越低越好，IS 越高越好；除特别说明外，生成指标基于 50,000 张图。
-- 同一 checkpoint 的多组 CFG 采样只在第一行保留 epoch 和 loss；`.tex` 中注释掉的行不算当前已采用结果。
-- [JiT](JiT)：原始 JiT 基线。
-- [JiT_cond](JiT_cond)：clean DINO patch tokens 与 Patch-level AdaLN。
-- [JiT_cond_cls](JiT_cond_cls)：clean DINO CLS token 与 Block-level AdaLN。
-- [jit_cond_dino_two_stage_1122](jit_cond_dino_two_stage_1122)：冻结 DinoDiT 的 noised / pred 两阶段 Pixel 训练。
-- [jit_cond_dino_two_stage_1122_pred_drop](jit_cond_dino_two_stage_1122_pred_drop)：独立 DinoDiT label dropout 的 pred 修复版。
-- [jit_cond_dino_two_stage_1122_ddim_recon_noflip](jit_cond_dino_two_stage_1122_ddim_recon_noflip)：带重建约束、无水平翻转的 Stage 1，以及对应的 latent 导出流程。
-- [jit_cond_dino_two_stage_1122_ddim_recon_noflip_perfile](jit_cond_dino_two_stage_1122_ddim_recon_noflip_perfile)：per-file 缓存转换、校验与 cached_recon 续训。
+Table 4 使用 RAEv2 normalized DINOv3-L k=7 clean patch tokens。Inference 改由冻结的 RAEv2 DDT-XL EMA 采样 normalized latent，再执行 Pixel Heun-50。
 
-表 4 的 B/L 模型对比和表 5 的相关工作汇总不属于本文这里的“表 1、2、3”说明范围。
+| Pixel epoch | 采样设置 | FID | IS |
+| --- | --- | ---: | ---: |
+| 40 | JiT CFG 2.9 | 4.54 | 224.2 |
+| 60 | JiT CFG 2.9 | 3.98 | 230.0 |
+| 80 | JiT CFG 2.9 | 3.88 | 231.7 |
+| 80 | JiT CFG 2.0 | 3.50 | 231.9 |
+| 160 | JiT CFG 2.0 | 3.38 | 232.1 |
+| 240 | JiT CFG 2.0 | **3.28** | **233.8** |
+
+该组是后续 RAEv2 noised、pred 以及 PixelDiT2-H 的 clean-B 对照。E60 的 3.98 / 230.0 也用于当前 H 的同 epoch 比较。
+
+## Table 5：RAEv2 noised latent + JiT-B/16（无 DINO time embedding）
+
+Training 使用：
+
+`z_cond = t_dino_pixel * clean + (1 - t_dino_pixel) * noise`，其中 `t_dino_pixel ~ U[0.75,1)`。
+
+Pixel 只接收 `E_pixel(t_pixel) + E_y(y) + W_g(z_cond)`，不额外接收 `t_dino_pixel` embedding。Inference 使用完整 RAEv2 sampler 生成的 latent。
+
+| Pixel epoch | 采样设置 | FID | IS |
+| --- | --- | ---: | ---: |
+| 20 | JiT CFG 2.9 | 14.91 | 147.2 |
+| 40 | JiT CFG 2.9 | 4.39 | 223.9 |
+| 60 | JiT CFG 2.9 | 3.78 | 229.9 |
+| 80 | JiT CFG 2.9 | 3.64 | 232.7 |
+| 80 | JiT CFG 2.0 | **3.23** | **233.6** |
+
+更精确的 E80、CFG 2.0 日志值为 FID 3.2272、IS 233.6044。当前结果说明 noised 训练没有破坏自由生成，且在 E80 达到了略优于 clean-B E240 的 FID；但训练轮数不同，不能据此直接断言 noised 一定优于 clean。
+
+## Table 6：RAEv2 DDT 单步 pred + JiT-B/16（无 DINO time embedding）
+
+Training 先按 Table 5 的方式构造 noised latent，再由冻结的 RAEv2 DDT-XL 做一次 clean x-prediction。RAEv2 的时间方向为 `x_t=(1-t)*clean+t*noise`，因此 DDT 接收 `t_rae=1-t_dino_pixel`。Pixel 只接收预测 tokens，不接收额外 DINO 时间 embedding。
+
+| Pixel epoch | 采样设置 | FID | IS |
+| --- | --- | ---: | ---: |
+| 20 | JiT CFG 2.9 | 15.71 | 152.1 |
+| 40 | JiT CFG 2.9 | 4.25 | 223.6 |
+| 60 | 尚无有效指标 | — | — |
+| 80 | 尚无有效指标 | — | — |
+
+E40 的 pred FID 略优于同 epoch noised 的 4.39，IS 则非常接近（223.6 对 223.9）。目前只能说明早期趋势，E60/E80 未完成前不能与 Table 5 的最终结果直接比较。
+
+## Table 7：RAEv2 clean latent + PixelDiT2-H/16 + REPA
+
+该组保留 PixelDiT2-H 主干和 REPA，损失为 `L = L_fm + 0.5 * L_cos`。Pixel sampling 使用 Heun-50、CFG 2.4、interval `[0.125,0.9]`。
+
+| Pixel epoch | fm loss | cos loss | FID | IS |
+| --- | ---: | ---: | ---: | ---: |
+| 20 | 0.0293 | 0.0960 | 10.61 | 162.4 |
+| 40 | 0.0269 | 0.0751 | 6.94 | 183.6 |
+| 60 | 0.0260 | 0.0677 | 5.52 | 197.3 |
+| 80 | 尚无有效指标 | — | — | — |
+
+**需要特别注意：当前 E60 的 H 不如 B。**
+
+- H E60：FID 5.52、IS 197.3；
+- clean-B E60：FID 3.98、IS 230.0；
+- noised-B E60：FID 3.78、IS 229.9。
+
+因此 H 在相同 epoch 下 FID 分别高 1.54 和约 1.74，IS 低约 33。虽然 H 的 FID 仍在随训练下降，但目前没有表现出模型规模优势。该比较同时存在模型容量、REPA、Pixel CFG 和训练配置差异，不能仅凭这一项指标归因于某一个因素；E80 之后仍需按同一评估协议复核。
+
+## Table 8：Cached reconstruction Pixel JiT
+
+Table 8 使用离线 25-step Heun-reconstructed DINO patch tokens 作为 cached conditions：
+
+- E_D=80、E_P=80、JiT CFG 2.9：FID 5.59、IS 259.8。
+- 同 checkpoint、JiT CFG 2.1：FID 5.43、IS 260.6。
+
+该组用于评估缓存重建语义的有效性，与 RAEv2 系列使用的 latent space 和采样路径不同，不与 Table 4–7 直接混排排名。
+
+## 表格阅读与结果使用约定
+
+- `E_D`、`E_P` 分别表示语义模型和 Pixel 模型的训练轮数；只有单一 Pixel 训练阶段时重点看 `E_P`。
+- 同一 checkpoint 的多组 CFG 结果不能当作不同训练模型；表格中的最佳值也必须同时保留 CFG 和 interval。
+- clean-val / clean-train reference 使用真实图片语义，不能与自由生成行直接视为相同任务。
+- `noised` 是直接注入加噪 latent；`pred` 是注入冻结语义模型的一步预测；两者 Inference 都使用完整语义采样结果。
+- `_no_tdinopixel` 表示不注入额外的 DINO 时间 embedding，并不表示取消 noised/pred 所需的 corruption time。
+- 当前 H 的结论仅限于已完成的 E60 指标；pred-B 的结论仅限于 E20/E40，均不外推。
+- `.tex` 在前述 Table 1–8 之后还保留 B/L comparison 和 related work 两张参考附表；它们不计入本文整理的前 8 张实验表，也未在本次更新中删除。
+
+主要代码入口：
+
+- [jit_cond_dino_two_stage_1122](jit_cond_dino_two_stage_1122)：DinoDiT noised / pred。
+- [jit_cond_dino_two_stage_1122_raev2](jit_cond_dino_two_stage_1122_raev2)：RAEv2 clean / noised / pred。
+- [jit_cond_dino_two_stage_1122_raev2_no_tdinopixel](jit_cond_dino_two_stage_1122_raev2_no_tdinopixel)：无额外 DINO time embedding 的 RAEv2 JiT-B 变体。
+- [PixelDiTv2_cond_RAEv2](PixelDiTv2_cond_RAEv2)：PixelDiT2-H + RAEv2 grounding + REPA。
+- [jit_cond_dino_two_stage_1122_ddim_recon_noflip_perfile](jit_cond_dino_two_stage_1122_ddim_recon_noflip_perfile)：per-file cached reconstruction。
