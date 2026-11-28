@@ -22,6 +22,7 @@
 - REPA 取 `patch_blocks[7]`，此处正好是 256 个 image tokens。32 个 context tokens 到 `patch_blocks[8]` 才插入。若显式改到后面的层做 REPA，代码会先移除 context tokens。
 - 默认训练 160 epoch。H200 默认使用 8 卡，每卡 batch 128，每个 batch 执行一次 optimizer 更新，global batch 为 1024。AdamW 使用 betas `(0.9,0.95)`、weight decay 0，前 6255 次 optimizer 更新线性 warmup 到 `2e-4`，之后保持恒定。采样使用 decay 0.9999 的 Pixel EMA。
 - RAEv2 sampler 从官方 `configs/stage2/sampling/imagenet-dinov3l-k7.yaml` 读取参数，默认 100 步、CFG 1.0、IG 1.78，IG 区间为 `[0.1,1]`。RAEv2 按自己的时间约定从 1 积分到 0，Pixel 从 0 积分到 1。clean 模式不向 Pixel 条件加入语义时间；noised 模式在训练时加入实际 `t_dino_pixel`，pred 和采样统一为 1。Pixel 使用 Heun 50 步，最后一步 Euler。Pixel CFG 2.4 只在 `0.125 < t < 0.9` 时生效。
+- 在线评估和独立采样都由 rank 0 输出 `Generation step i/N` 批次进度；每个 batch 内先显示 `RAEv2 DiT sampling` 的 100 步 tqdm 进度条，完成后显示 `Pixel DiT sampling` 的 50 步进度条。其他 rank 不输出进度条。
 
 ## H200 入口
 

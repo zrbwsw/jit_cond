@@ -45,7 +45,10 @@ def evaluate(model, args, epoch, batch_size, log_writer=None):
         devices = [torch.cuda.current_device()] if device.type == 'cuda' else []
         with use_ema(model), torch.random.fork_rng(devices=devices):
             torch.manual_seed(args.seed + rank)
-            for start in range(rank * batch_size, args.num_images, world * batch_size):
+            num_batches = (args.num_images + world * batch_size - 1) // (world * batch_size)
+            for batch_index, start in enumerate(range(rank * batch_size, args.num_images, world * batch_size)):
+                if misc.is_main_process():
+                    print(f"Generation step {batch_index}/{num_batches}", flush=True)
                 stop = min(start + batch_size, args.num_images)
                 indices = torch.arange(start, stop, device=device)
                 labels = indices * args.class_num // args.num_images

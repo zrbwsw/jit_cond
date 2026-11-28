@@ -1,6 +1,7 @@
 """PixelDiT2 flow matching with clean, noised, or DDT-predicted grounding and REPA."""
 import torch
 from torch import nn
+from tqdm import tqdm
 
 from pixeldit2_c2i import PixelDiT2
 from repa import REPATeacher, build_repa_projection, repa_cosine_loss
@@ -12,6 +13,11 @@ def latent_to_tokens(latent):
     if latent.ndim != 4 or tuple(latent.shape[1:]) != (1024, 16, 16):
         raise ValueError(f"Expected normalized RAEv2 latent [B,1024,16,16], got {tuple(latent.shape)}")
     return latent.flatten(2).transpose(1, 2).contiguous()
+
+
+def _progress_disabled():
+    return (torch.distributed.is_available() and torch.distributed.is_initialized()
+            and torch.distributed.get_rank() != 0)
 
 
 class Denoiser(nn.Module):
@@ -131,15 +137,19 @@ class Denoiser(nn.Module):
         ts = torch.linspace(0.0, 1.0, self.steps_pixel + 1, device=x.device, dtype=x.dtype)
         ts = ts.view(-1, 1, 1, 1, 1).expand(-1, len(labels), -1, -1, -1)
         null_labels = torch.full_like(labels, self.num_classes)
-        for i in range(self.steps_pixel):
-            t, t_next = ts[i], ts[i + 1]
-            dt = t_next - t
-            v = self._velocity(x, t, labels, null_labels, grounding, grounding_t_dino)
-            x_euler = x + dt * v
-            if i == self.steps_pixel - 1:
-                return x_euler
-            v_next = self._velocity(x_euler, t_next, labels, null_labels, grounding, grounding_t_dino)
-            x = x + dt * 0.5 * (v + v_next)
+        with tqdm(total=self.steps_pixel, desc="Pixel DiT sampling", unit="step",
+                  dynamic_ncols=True, leave=True, disable=_progress_disabled()) as progress:
+            for i in range(self.steps_pixel):
+                t, t_next = ts[i], ts[i + 1]
+                dt = t_next - t
+                v = self._velocity(x, t, labels, null_labels, grounding, grounding_t_dino)
+                x_euler = x + dt * v
+                if i == self.steps_pixel - 1:
+                    progress.update(1)
+                    return x_euler
+                v_next = self._velocity(x_euler, t_next, labels, null_labels, grounding, grounding_t_dino)
+                x = x + dt * 0.5 * (v + v_next)
+                progress.update(1)
 
     def _velocity(self, x, t, labels, null_labels, grounding, t_dino=None):
         scale = (1 - t).clamp_min(self.t_eps)

@@ -274,3 +274,44 @@ def test_raev2_predict_clean_uses_complementary_time_and_full_output():
     torch.testing.assert_close(sampler.model.t, 1 - t_dino)
     torch.testing.assert_close(sampler.model.kwargs["context"], labels)
     assert sampler.model.kwargs["attn_mask"] is None
+
+
+def test_raev2_sampling_progress(capsys):
+    from types import SimpleNamespace
+    from raev2_latent_sampler import RAEv2LatentSampler
+
+    sampler = RAEv2LatentSampler.__new__(RAEv2LatentSampler)
+    sampler.device = torch.device("cpu")
+    sampler.latent_size = (1024, 16, 16)
+    sampler.null_label = 1000
+    sampler.config = SimpleNamespace(sampler=SimpleNamespace(num_steps=2))
+    sampler.use_guidance = False
+    sampler.sample_model_kwargs = {}
+    sampler.model_fn = lambda x: x
+
+    def fake_sample_fn(noise, model_fn, **kwargs):
+        first = model_fn(noise)
+        second = model_fn(first)
+        return [first, second]
+
+    sampler.sample_fn = fake_sample_fn
+    samples = sampler.sample_dino_latent(torch.tensor([13]))
+    assert samples.shape == (1, 1024, 16, 16)
+    captured = capsys.readouterr()
+    assert "RAEv2 DiT sampling" in captured.err
+    assert "2/2" in captured.err
+
+
+def test_pixel_sampling_progress(pipeline, capsys):
+    args = pipeline
+    args.evaluate_gen = True
+    model = denoiser.Denoiser(args).eval()
+    model.steps_pixel = 1
+    model.raev2_sampler = type('Sampler', (), {
+        'sample_dino_latent': lambda self, labels: torch.ones(len(labels), 1024, 16, 16),
+    })()
+    images = model.generate(torch.tensor([13]))
+    assert images.shape == (1, 3, 256, 256)
+    captured = capsys.readouterr()
+    assert "Pixel DiT sampling" in captured.err
+    assert "1/1" in captured.err

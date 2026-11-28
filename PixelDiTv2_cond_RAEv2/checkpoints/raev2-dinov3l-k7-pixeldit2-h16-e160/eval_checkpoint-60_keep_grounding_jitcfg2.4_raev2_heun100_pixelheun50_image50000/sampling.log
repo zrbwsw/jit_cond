@@ -1,0 +1,23 @@
+/mnt/shared-storage-user/datafactory-share/gushishen/agent-z/envs/irepa-py310-cu126-20261015/bin/python -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=8 /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/PixelDiTv2_cond_RAEv2/main_jit.py --evaluate_gen --checkpoint /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/PixelDiTv2_cond_RAEv2/checkpoints/raev2-dinov3l-k7-pixeldit2-h16-e160/checkpoint-last.pth --steps_pixel 50 --cfg_pixel 2.4 --interval_min_pixel 0.125 --interval_max_pixel 0.9 --cfg_keep_grounding --checkpoint /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/PixelDiTv2_cond_RAEv2/checkpoints/raev2-dinov3l-k7-pixeldit2-h16-e160/checkpoint-60.pth --output_dir /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/jit_cond_ablation/PixelDiTv2_cond_RAEv2/checkpoints/raev2-dinov3l-k7-pixeldit2-h16-e160/eval_checkpoint-60_keep_grounding_jitcfg2.4_raev2_heun100_pixelheun50_image50000 --num_images 50000 --gen_bsz 64 
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+| distributed init (rank 0): env://, gpu 0
+| distributed init (rank 6): env://, gpu 6
+[rank6]:[W1128 13:41:37.940551938 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 6]  using GPU 6 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 5): env://, gpu 5
+[rank5]:[W1128 13:41:37.988175844 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 5]  using GPU 5 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 4): env://, gpu 4
+[rank4]:[W1128 13:41:37.251549618 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 4]  using GPU 4 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 7): env://, gpu 7
+[rank7]:[W1128 13:41:37.264205126 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 7]  using GPU 7 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 1): env://, gpu 1
+| distributed init (rank 2): env://, gpu 2
+[rank1]:[W1128 13:41:37.270068446 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[rank2]:[W1128 13:41:37.270097204 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 2]  using GPU 2 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[rank0]:[W1128 13:41:37.270585026 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+| distributed init (rank 3): env://, gpu 3
+[rank3]:[W1128 13:41:37.308466576 ProcessGroupNCCL.cpp:4715] [PG ID 0 PG GUID 0 Rank 3]  using GPU 3 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can pecify device_id in init_process_group() to force use of a particular device.
+[13:42:36.629381] Loaded stage2.models.DDT.DiTwDDTHeadIG from /mnt/shared-storage-user/datafactory-share/gushishen/agent-z/RAEv2/stage2/imagenet/dinov3l-k7/checkpoint.pt
+[13:42:37.992712] RAEv2 sampler ready: steps=100, CFG=1.0, IG=1.78, latent_size=(1024, 16, 16)

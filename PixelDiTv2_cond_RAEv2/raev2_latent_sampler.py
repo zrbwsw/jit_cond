@@ -6,6 +6,13 @@ import sys
 from pathlib import Path
 
 import torch
+from tqdm import tqdm
+
+
+def _progress_disabled():
+    return (torch.distributed.is_available() and torch.distributed.is_initialized()
+            and torch.distributed.get_rank() != 0)
+
 
 def _add_source_tree(root):
     """Support both the official short imports and this workspace's qualified imports."""
@@ -118,7 +125,15 @@ class RAEv2LatentSampler:
             dtype=torch.bfloat16,
             enabled=self.device.type == "cuda",
         ):
-            samples = self.sample_fn(noise, self.model_fn, **model_kwargs)[-1]
+            with tqdm(total=self.config.sampler.num_steps, desc="RAEv2 DiT sampling",
+                      unit="step", dynamic_ncols=True, leave=True,
+                      disable=_progress_disabled()) as progress:
+                def tracked_model_fn(*args, **kwargs):
+                    output = self.model_fn(*args, **kwargs)
+                    progress.update(1)
+                    return output
+
+                samples = self.sample_fn(noise, tracked_model_fn, **model_kwargs)[-1]
         if self.use_guidance:
             samples = samples.chunk(2, dim=0)[0]
         if samples.shape != (batch_size, *self.latent_size):
